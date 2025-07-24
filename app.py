@@ -585,8 +585,82 @@ def get_growth_score(symbol: str, growth_category: str) -> int:
     }
     return scores.get(growth_category, 50)
 
+def analyze_covered_call_opportunity(position, call, current_price, iv_rank, growth_score, strike_multiplier, monthly_yield):
+    """Analyze covered call opportunity and provide Motley Fool style recommendation"""
+    
+    # Calculate key metrics
+    upside_to_strike = ((call['strike'] - current_price) / current_price) * 100
+    breakeven_price = current_price - call['ask']
+    downside_protection = ((current_price - breakeven_price) / current_price) * 100
+    
+    # Initialize recommendation
+    rec = {
+        'verdict': '',
+        'reasoning': '',
+        'action': '',
+        'conditional': ''
+    }
+    
+    # High growth stocks (score > 70) need more upside room
+    if growth_score > 70:
+        if strike_multiplier >= 1.10:  # 10%+ upside
+            if monthly_yield > 1.5:
+                rec['verdict'] = "🟢 STRONG YES"
+                rec['reasoning'] = f"Excellent balance! {upside_to_strike:.1f}% upside + {monthly_yield:.1f}% monthly income on high-growth stock"
+                rec['action'] = "Sell calls on 50-75% of position"
+            elif monthly_yield > 0.8:
+                rec['verdict'] = "🟡 YES with conditions"
+                rec['reasoning'] = f"Good upside room ({upside_to_strike:.1f}%) but modest yield ({monthly_yield:.1f}%)"
+                rec['conditional'] = f"Wait for IV spike above {iv_rank + 20:.0f}% or stock rally to ${current_price * 1.03:.2f}"
+            else:
+                rec['verdict'] = "🔴 NO - Better opportunities exist"
+                rec['reasoning'] = "Premium too low for the risk on growth stock"
+                rec['conditional'] = f"Revisit if premium reaches ${call['ask'] * 1.5:.2f}"
+        else:
+            rec['verdict'] = "🔴 NO - Caps growth too much"
+            rec['reasoning'] = f"Only {upside_to_strike:.1f}% upside on high-growth stock"
+            rec['conditional'] = "Look for strikes 10%+ OTM instead"
+    
+    # Moderate growth stocks (score 40-70)
+    elif growth_score >= 40:
+        if monthly_yield > 2.0:
+            rec['verdict'] = "🟢 YES - Great income"
+            rec['reasoning'] = f"{monthly_yield:.1f}% monthly yield with {upside_to_strike:.1f}% upside"
+            rec['action'] = "Sell calls on 75-100% of position"
+        elif monthly_yield > 1.0 and upside_to_strike > 5:
+            rec['verdict'] = "🟡 MAYBE - Decent setup"
+            rec['reasoning'] = f"Balanced {monthly_yield:.1f}% yield + {upside_to_strike:.1f}% upside"
+            rec['conditional'] = f"YES if stock drops to ${current_price * 0.97:.2f} (better entry)"
+        else:
+            rec['verdict'] = "🟡 WAIT for better premium"
+            rec['reasoning'] = "Current yield doesn't justify the cap risk"
+            rec['conditional'] = f"Target {monthly_yield * 1.5:.1f}% monthly yield"
+    
+    # Conservative/value stocks (score < 40)
+    else:
+        if monthly_yield > 1.5:
+            rec['verdict'] = "🟢 YES - Income focus"
+            rec['reasoning'] = f"Strong {monthly_yield:.1f}% yield on stable stock"
+            rec['action'] = "Sell calls on 100% of position"
+        elif iv_rank > 70:
+            rec['verdict'] = "🟡 YES - High volatility play"
+            rec['reasoning'] = f"IV Rank {iv_rank:.0f}% suggests inflated premiums"
+            rec['action'] = "Sell now, buy back on IV crush"
+        else:
+            rec['verdict'] = "🔴 NO - Low reward"
+            rec['reasoning'] = "Better to hold or sell stock"
+            rec['conditional'] = "Consider selling the stock instead"
+    
+    # Add IV-based adjustments
+    if iv_rank > 80:
+        rec['reasoning'] += f" | ⚡ IV Rank {iv_rank:.0f}% = PREMIUM ALERT!"
+    elif iv_rank < 30:
+        rec['reasoning'] += f" | 💤 IV Rank {iv_rank:.0f}% = Wait for volatility"
+    
+    return rec
+
 def scan_covered_call_opportunities():
-    """Scan positions for covered call opportunities"""
+    """Scan positions for covered call opportunities with tiered analysis"""
     opportunities = []
     
     for position in st.session_state.positions:
@@ -601,46 +675,77 @@ def scan_covered_call_opportunities():
             if not options_dates:
                 continue
             
-            target_date = datetime.now() + timedelta(days=30)
-            best_date = min(options_dates, 
-                          key=lambda x: abs(datetime.strptime(x, '%Y-%m-%d') - target_date))
+            # Look at multiple expiration dates (21-45 days out)
+            target_dates = [
+                datetime.now() + timedelta(days=21),
+                datetime.now() + timedelta(days=30),
+                datetime.now() + timedelta(days=45)
+            ]
             
-            opt_chain = ticker.option_chain(best_date)
-            calls = opt_chain.calls
-            
-            otm_calls = calls[calls['strike'] > current_price * 1.05]
-            
-            if not otm_calls.empty:
-                for _, call in otm_calls.head(3).iterrows():
-                    iv = call.get('impliedVolatility', 0.3)
-                    iv_rank = calculate_iv_rank(position['symbol'], iv)
+            for target_date in target_dates:
+                best_date = min(options_dates, 
+                              key=lambda x: abs(datetime.strptime(x, '%Y-%m-%d') - target_date))
+                
+                opt_chain = ticker.option_chain(best_date)
+                calls = opt_chain.calls
+                
+                # Look at wider range of strikes (3% to 15% OTM)
+                strikes_to_analyze = [
+                    (1.03, "Near the money - High income, higher risk"),
+                    (1.05, "Conservative - Balanced income/upside"),
+                    (1.08, "Growth-friendly - More upside room"),
+                    (1.10, "Aggressive growth - Maximum upside"),
+                    (1.15, "Ultra growth - Emergency income only")
+                ]
+                
+                for strike_multiplier, strike_desc in strikes_to_analyze:
+                    target_strike = current_price * strike_multiplier
                     
-                    if iv_rank > 50:
-                        growth_score = get_growth_score(
-                            position['symbol'], 
-                            position['growth_category']
-                        )
+                    # Find closest strike to our target
+                    if len(calls) > 0:
+                        closest_strike_idx = (calls['strike'] - target_strike).abs().idxmin()
+                        call = calls.loc[closest_strike_idx]
                         
-                        premium = (call['bid'] + call['ask']) / 2
-                        monthly_yield = (premium / current_price) * 100
-                        
-                        opportunities.append({
-                            'position_key': f"{position['symbol']}_{position['account_type']}",
-                            'symbol': position['symbol'],
-                            'current_price': current_price,
-                            'strike': call['strike'],
-                            'expiration': best_date,
-                            'premium': premium,
-                            'bid': call['bid'],
-                            'ask': call['ask'],
-                            'iv': iv,
-                            'iv_rank': iv_rank,
-                            'growth_score': growth_score,
-                            'monthly_yield': monthly_yield,
-                            'shares': position['shares'],
-                            'max_contracts': position['shares'] // 100,
-                            'growth_category': position['growth_category']
-                        })
+                        if call['bid'] > 0:  # Only if there's a real bid
+                            iv = call.get('impliedVolatility', 0.3)
+                            iv_rank = calculate_iv_rank(position['symbol'], iv)
+                            
+                            growth_score = get_growth_score(
+                                position['symbol'], 
+                                position['growth_category']
+                            )
+                            
+                            premium = (call['bid'] + call['ask']) / 2
+                            monthly_yield = (premium / current_price) * 100 * (30 / (datetime.strptime(best_date, '%Y-%m-%d') - datetime.now()).days)
+                            annual_yield = monthly_yield * 12
+                            
+                            # Calculate recommendation based on multiple factors
+                            recommendation = analyze_covered_call_opportunity(
+                                position, call, current_price, iv_rank, growth_score, 
+                                strike_multiplier, monthly_yield
+                            )
+                            
+                            opportunities.append({
+                                'position_key': f"{position['symbol']}_{position['account_type']}",
+                                'symbol': position['symbol'],
+                                'current_price': current_price,
+                                'strike': call['strike'],
+                                'strike_desc': strike_desc,
+                                'expiration': best_date,
+                                'premium': premium,
+                                'bid': call['bid'],
+                                'ask': call['ask'],
+                                'iv': iv,
+                                'iv_rank': iv_rank,
+                                'growth_score': growth_score,
+                                'monthly_yield': monthly_yield,
+                                'annual_yield': annual_yield,
+                                'shares': position['shares'],
+                                'max_contracts': position['shares'] // 100,
+                                'growth_category': position['growth_category'],
+                                'recommendation': recommendation,
+                                'days_to_expiry': (datetime.strptime(best_date, '%Y-%m-%d') - datetime.now()).days
+                            })
                         
         except Exception as e:
             st.error(f"Error scanning {position['symbol']}: {str(e)}")
@@ -648,27 +753,77 @@ def scan_covered_call_opportunities():
     return sorted(opportunities, key=lambda x: x['monthly_yield'], reverse=True)
 
 def display_opportunity_card(opp: Dict):
-    """Display opportunity card with take/pass buttons"""
-    days_to_exp = (datetime.strptime(opp['expiration'], '%Y-%m-%d') - datetime.now()).days
+    """Display enhanced opportunity card with Motley Fool style analysis"""
+    
+    # Color code based on verdict
+    verdict_color = {
+        "🟢": "green",
+        "🟡": "orange", 
+        "🔴": "red"
+    }
+    
+    border_color = verdict_color.get(opp['recommendation']['verdict'][:2], "gray")
     
     with st.container():
+        # Create a colored border based on recommendation
         st.markdown(f"""
-        ### {opp['symbol']} - {opp['growth_category']} STRATEGY
-        **Strike:** ${opp['strike']:.2f} | **Premium:** ${opp['premium']:.2f} | **Exp:** {opp['expiration']} ({days_to_exp}d)  
-        **Growth Score:** {opp['growth_score']}/100 | **IV Rank:** {opp['iv_rank']:.0f}% | **Monthly Yield:** {opp['monthly_yield']:.1f}%
-        """)
+        <div style="border: 2px solid {border_color}; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+        """, unsafe_allow_html=True)
         
+        # Header with verdict
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown(f"### {opp['symbol']} - ${opp['strike']:.2f} Strike")
+            st.markdown(f"**{opp['strike_desc']}**")
+        with col2:
+            st.metric("Monthly Yield", f"{opp['monthly_yield']:.1f}%", 
+                     f"Annual: {opp['annual_yield']:.0f}%")
+        
+        # Key metrics
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Current Price", f"${opp['current_price']:.2f}")
+        with col2:
+            st.metric("Premium", f"${opp['premium']:.2f}")
+        with col3:
+            st.metric("Days to Exp", opp['days_to_expiry'])
+        with col4:
+            st.metric("IV Rank", f"{opp['iv_rank']:.0f}%")
+        
+        # Recommendation section
+        st.markdown("---")
+        st.markdown(f"### {opp['recommendation']['verdict']}")
+        st.markdown(f"**Analysis:** {opp['recommendation']['reasoning']}")
+        
+        if opp['recommendation']['action']:
+            st.info(f"**Suggested Action:** {opp['recommendation']['action']}")
+        
+        if opp['recommendation']['conditional']:
+            st.warning(f"**Alternative:** {opp['recommendation']['conditional']}")
+        
+        # Action buttons
+        st.markdown("---")
         col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
         
         with col1:
-            if st.button("✅ TAKE", key=f"take_{opp['position_key']}_{opp['strike']}"):
+            if st.button("✅ TAKE", key=f"take_{opp['position_key']}_{opp['strike']}_{opp['days_to_expiry']}"):
                 st.session_state.show_take_dialog = opp
                 
         with col2:
-            if st.button("❌ PASS", key=f"pass_{opp['position_key']}_{opp['strike']}"):
-                record_decision(opp, "PASS", 0, opp['premium'], "Not attractive enough")
+            if st.button("❌ PASS", key=f"pass_{opp['position_key']}_{opp['strike']}_{opp['days_to_expiry']}"):
+                record_decision(opp, "PASS", 0, opp['premium'], opp['recommendation']['reasoning'])
                 st.success("Decision recorded!")
                 st.rerun()
+                
+        with col3:
+            if st.button("📌 WATCH", key=f"watch_{opp['position_key']}_{opp['strike']}_{opp['days_to_expiry']}"):
+                # Add to a covered call watchlist
+                if 'cc_watchlist' not in st.session_state:
+                    st.session_state.cc_watchlist = []
+                st.session_state.cc_watchlist.append(opp)
+                st.success("Added to covered call watchlist!")
+        
+        st.markdown("</div>", unsafe_allow_html=True)
 
 def record_decision(opp: Dict, decision: str, contracts: int, fill_price: float, reasoning: str):
     """Record trade decision"""
@@ -717,11 +872,79 @@ def main():
         
         if hasattr(st.session_state, 'opportunities'):
             if st.session_state.opportunities:
-                for opp in st.session_state.opportunities:
+                # Show summary
+                st.markdown("### 📊 Opportunity Summary")
+                
+                # Count recommendations by type
+                strong_yes = len([o for o in st.session_state.opportunities if "STRONG YES" in o['recommendation']['verdict']])
+                yes = len([o for o in st.session_state.opportunities if "YES" in o['recommendation']['verdict'] and "STRONG" not in o['recommendation']['verdict']])
+                maybe = len([o for o in st.session_state.opportunities if "MAYBE" in o['recommendation']['verdict'] or "WAIT" in o['recommendation']['verdict']])
+                no = len([o for o in st.session_state.opportunities if "NO" in o['recommendation']['verdict']])
+                
+                col1, col2, col3, col4, col5 = st.columns(5)
+                with col1:
+                    st.metric("Total Opportunities", len(st.session_state.opportunities))
+                with col2:
+                    st.metric("🟢 Strong Yes", strong_yes)
+                with col3:
+                    st.metric("🟡 Yes/Maybe", yes + maybe)
+                with col4:
+                    st.metric("🔴 No", no)
+                with col5:
+                    avg_yield = sum(o['monthly_yield'] for o in st.session_state.opportunities) / len(st.session_state.opportunities)
+                    st.metric("Avg Monthly Yield", f"{avg_yield:.1f}%")
+                
+                st.markdown("---")
+                
+                # Filter options
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    filter_verdict = st.selectbox("Filter by Verdict", 
+                        ["All", "🟢 Strong Yes Only", "🟢🟡 Yes/Maybe", "🔴 No/Wait"])
+                with col2:
+                    sort_by = st.selectbox("Sort by", 
+                        ["Monthly Yield", "IV Rank", "Days to Expiry", "Strike Distance"])
+                with col3:
+                    min_yield = st.slider("Min Monthly Yield %", 0.0, 5.0, 0.0, 0.1)
+                
+                # Filter and sort opportunities
+                filtered_opps = st.session_state.opportunities
+                
+                if filter_verdict != "All":
+                    if filter_verdict == "🟢 Strong Yes Only":
+                        filtered_opps = [o for o in filtered_opps if "STRONG YES" in o['recommendation']['verdict']]
+                    elif filter_verdict == "🟢🟡 Yes/Maybe":
+                        filtered_opps = [o for o in filtered_opps if "NO" not in o['recommendation']['verdict']]
+                    elif filter_verdict == "🔴 No/Wait":
+                        filtered_opps = [o for o in filtered_opps if "NO" in o['recommendation']['verdict'] or "WAIT" in o['recommendation']['verdict']]
+                
+                filtered_opps = [o for o in filtered_opps if o['monthly_yield'] >= min_yield]
+                
+                # Sort
+                if sort_by == "Monthly Yield":
+                    filtered_opps = sorted(filtered_opps, key=lambda x: x['monthly_yield'], reverse=True)
+                elif sort_by == "IV Rank":
+                    filtered_opps = sorted(filtered_opps, key=lambda x: x['iv_rank'], reverse=True)
+                elif sort_by == "Days to Expiry":
+                    filtered_opps = sorted(filtered_opps, key=lambda x: x['days_to_expiry'])
+                elif sort_by == "Strike Distance":
+                    filtered_opps = sorted(filtered_opps, key=lambda x: (x['strike'] - x['current_price']) / x['current_price'])
+                
+                st.markdown("---")
+                
+                # Display filtered opportunities
+                for opp in filtered_opps:
                     display_opportunity_card(opp)
                     st.markdown("---")
             else:
-                st.info("No opportunities found. Check that your positions have liquid options.")
+                st.info("No opportunities found. This could mean:")
+                st.markdown("""
+                - Your positions don't have liquid options chains
+                - Premiums are too low across the board
+                - Try adjusting your position sizes to have at least 100 shares
+                
+                💡 **Tip:** Focus on adding positions in high-volatility growth stocks with active options markets
+                """)
         else:
             st.info("Click 'Scan for Opportunities' to find covered call trades")
         
