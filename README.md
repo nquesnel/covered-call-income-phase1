@@ -18,7 +18,7 @@ A comprehensive web application for managing covered call options strategies, tr
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/covered-call-income-phase1.git
+git clone https://github.com/nquesnel/covered-call-income-phase1.git
 cd covered-call-income-phase1
 ```
 
