@@ -79,7 +79,7 @@ def load_demo_portfolio():
     # Add each position with growth scoring
     for pos in positions:
         # Skip if position already exists
-        existing = [p for p in st.session_state.positions if p['symbol'] == pos['symbol'] and p['account_type'] == pos['account_type']]
+        existing = [p for p in st.session_state.positions if isinstance(p, dict) and p.get('symbol') == pos['symbol'] and p.get('account_type') == pos['account_type']]
         if not existing:
             score, category, _ = calculate_growth_score(pos['symbol'])
             pos['growth_category'] = category
@@ -93,7 +93,12 @@ def load_demo_portfolio():
 def initialize_session_state():
     """Initialize session state variables"""
     if 'positions' not in st.session_state:
-        st.session_state.positions = load_json_data(POSITIONS_FILE)
+        data = load_json_data(POSITIONS_FILE)
+        # Ensure positions is always a list
+        if isinstance(data, dict):
+            st.session_state.positions = []
+        else:
+            st.session_state.positions = data if data else []
     if 'decisions' not in st.session_state:
         st.session_state.decisions = load_json_data(DECISIONS_FILE)
     if 'growth_screener' not in st.session_state:
