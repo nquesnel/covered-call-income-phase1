@@ -589,7 +589,7 @@ def scan_covered_call_opportunities():
     """Scan positions for covered call opportunities"""
     opportunities = []
     
-    for position_key, position in st.session_state.positions.items():
+    for position in st.session_state.positions:
         try:
             ticker = yf.Ticker(position['symbol'])
             current_price = ticker.info.get('currentPrice', 0)
@@ -625,7 +625,7 @@ def scan_covered_call_opportunities():
                         monthly_yield = (premium / current_price) * 100
                         
                         opportunities.append({
-                            'position_key': position_key,
+                            'position_key': f"{position['symbol']}_{position['account_type']}",
                             'symbol': position['symbol'],
                             'current_price': current_price,
                             'strike': call['strike'],
