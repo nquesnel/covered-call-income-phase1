@@ -1063,6 +1063,27 @@ def main():
             if watchlist_data:
                 df = pd.DataFrame(watchlist_data)
                 
+                # Display column headers
+                header_col1, header_col2, header_col3, header_col4, header_col5, header_col6, header_col7, header_col8 = st.columns([1.5, 1, 1, 1, 1, 1, 3, 1])
+                with header_col1:
+                    st.markdown("**Symbol**")
+                with header_col2:
+                    st.markdown("**Added**")
+                with header_col3:
+                    st.markdown("**Entry**")
+                with header_col4:
+                    st.markdown("**Current**")
+                with header_col5:
+                    st.markdown("**Change**")
+                with header_col6:
+                    st.markdown("**Score**")
+                with header_col7:
+                    st.markdown("**Notes**")
+                with header_col8:
+                    st.markdown("**Action**")
+                
+                st.markdown("---")
+                
                 # Display with actions
                 for idx, row in df.iterrows():
                     with st.container():
