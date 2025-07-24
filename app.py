@@ -130,6 +130,82 @@ def display_monthly_progress():
     with col4:
         st.metric("Margin Debt", "$60,000", "-$2,800")
 
+def bulk_import_positions():
+    """Bulk import positions from text/CSV"""
+    st.subheader("📋 Bulk Import Positions")
+    
+    st.markdown("""
+    **Format:** Enter positions as CSV or paste from spreadsheet
+    ```
+    Symbol, Shares, Cost Basis, Account Type
+    AAPL, 100, 150.00, taxable
+    MSFT, 200, 300.00, roth
+    ```
+    """)
+    
+    import_text = st.text_area(
+        "Paste your positions here",
+        placeholder="AAPL, 100, 150.00, taxable\nMSFT, 200, 300.00, roth\nTSLA, 50, 800.00, taxable",
+        height=200
+    )
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        default_account = st.selectbox("Default Account (if not specified)", ["taxable", "roth"])
+    with col2:
+        if st.button("🚀 Import All", type="primary"):
+            if import_text:
+                lines = import_text.strip().split('\n')
+                imported = 0
+                errors = []
+                
+                for line in lines:
+                    try:
+                        # Skip header lines
+                        if 'symbol' in line.lower() or not line.strip():
+                            continue
+                            
+                        # Parse CSV line
+                        parts = [p.strip() for p in line.split(',')]
+                        if len(parts) >= 3:
+                            symbol = parts[0].upper()
+                            shares = int(float(parts[1]))
+                            cost_basis = float(parts[2])
+                            account = parts[3] if len(parts) > 3 else default_account
+                            
+                            # Calculate growth score
+                            score, category, _ = calculate_growth_score(symbol)
+                            
+                            # Add position
+                            position = {
+                                "symbol": symbol,
+                                "shares": shares,
+                                "cost_basis": cost_basis,
+                                "account_type": account,
+                                "growth_category": category,
+                                "growth_score": score,
+                                "added_date": datetime.now().isoformat()
+                            }
+                            
+                            st.session_state.positions.append(position)
+                            imported += 1
+                            
+                    except Exception as e:
+                        errors.append(f"Error on line '{line}': {str(e)}")
+                
+                # Save positions
+                if imported > 0:
+                    save_json_data(POSITIONS_FILE, st.session_state.positions)
+                    st.success(f"✅ Imported {imported} positions successfully!")
+                    
+                if errors:
+                    st.error("❌ Errors:")
+                    for error in errors:
+                        st.write(f"- {error}")
+                        
+                if imported > 0:
+                    st.rerun()
+
 def add_position():
     """Add new position form"""
     st.subheader("Add New Position")
@@ -558,7 +634,14 @@ def main():
                     st.rerun()
     
     with tab2:
-        add_position()
+        # Toggle between single add and bulk import
+        import_mode = st.radio("Add Method", ["➕ Single Position", "📋 Bulk Import"], horizontal=True)
+        
+        if import_mode == "➕ Single Position":
+            add_position()
+        else:
+            bulk_import_positions()
+            
         st.markdown("---")
         display_positions()
     
