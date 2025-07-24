@@ -236,8 +236,12 @@ def bulk_import_positions():
                             "added_date": datetime.now().isoformat()
                         }
                         
-                        st.session_state.positions.append(position)
-                        imported += 1
+                        # Check if position already exists
+                        exists = any(p['symbol'] == symbol and p['account_type'] == account_type 
+                                   for p in st.session_state.positions)
+                        if not exists:
+                            st.session_state.positions.append(position)
+                            imported += 1
             
             if imported > 0:
                 save_json_data(POSITIONS_FILE, st.session_state.positions)
@@ -330,7 +334,34 @@ def add_position():
 
 def display_positions():
     """Display current positions"""
-    st.subheader("Current Positions")
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.subheader("Current Positions")
+    with col2:
+        col2a, col2b = st.columns(2)
+        with col2a:
+            if st.button("🧹 Remove Dupes", type="secondary"):
+                # Remove duplicates
+                seen = set()
+                unique_positions = []
+                for pos in st.session_state.positions:
+                    key = (pos['symbol'], pos['account_type'])
+                    if key not in seen:
+                        seen.add(key)
+                        unique_positions.append(pos)
+                
+                removed = len(st.session_state.positions) - len(unique_positions)
+                st.session_state.positions = unique_positions
+                save_json_data(POSITIONS_FILE, st.session_state.positions)
+                if removed > 0:
+                    st.success(f"Removed {removed} duplicates!")
+                    st.rerun()
+                    
+        with col2b:
+            if st.button("🗑️ Clear All", type="secondary"):
+                st.session_state.positions = []
+                save_json_data(POSITIONS_FILE, st.session_state.positions)
+                st.rerun()
     
     if not st.session_state.positions:
         st.info("No positions yet. Add your first position above!")
