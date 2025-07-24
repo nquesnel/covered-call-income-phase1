@@ -34,6 +34,62 @@ def save_json_data(filepath: str, data: Dict) -> None:
     with open(filepath, 'w') as f:
         json.dump(data, f, indent=2)
 
+def load_demo_portfolio():
+    """Load Neal's complete portfolio"""
+    positions = [
+        # Traditional IRA
+        {"symbol": "AMZN", "shares": 60, "cost_basis": 37.83, "account_type": "roth"},
+        {"symbol": "BRK.B", "shares": 20, "cost_basis": 124.44, "account_type": "roth"},
+        {"symbol": "COIN", "shares": 20, "cost_basis": 228.75, "account_type": "roth"},
+        {"symbol": "CRWD", "shares": 10, "cost_basis": 206.91, "account_type": "roth"},
+        {"symbol": "HIMS", "shares": 100, "cost_basis": 28.06, "account_type": "roth"},
+        {"symbol": "MA", "shares": 52.069, "cost_basis": 86.67, "account_type": "roth"},
+        {"symbol": "RKLB", "shares": 75, "cost_basis": 28.24, "account_type": "roth"},
+        {"symbol": "TDOC", "shares": 75, "cost_basis": 105.47, "account_type": "roth"},
+        {"symbol": "TSLA", "shares": 5, "cost_basis": 271.94, "account_type": "roth"},
+        {"symbol": "TWLO", "shares": 50, "cost_basis": 29.79, "account_type": "roth"},
+        # Taxable Account 1
+        {"symbol": "AAPL", "shares": 244.9777, "cost_basis": 43.99, "account_type": "taxable"},
+        {"symbol": "ADBE", "shares": 10, "cost_basis": 29.45, "account_type": "taxable"},
+        {"symbol": "COST", "shares": 25.079, "cost_basis": 78.46, "account_type": "taxable"},
+        {"symbol": "EXEL", "shares": 200, "cost_basis": 4.97, "account_type": "taxable"},
+        {"symbol": "GOOGL", "shares": 60.351, "cost_basis": 12.95, "account_type": "taxable"},
+        {"symbol": "BAC", "shares": 200, "cost_basis": 5.49, "account_type": "taxable"},
+        {"symbol": "COIN", "shares": 15, "cost_basis": 193.75, "account_type": "taxable"},
+        # Skip existing TSLA taxable since it's already there
+        # Roth IRA
+        {"symbol": "BB", "shares": 500, "cost_basis": 4.28, "account_type": "roth"},
+        {"symbol": "CRWD", "shares": 7, "cost_basis": 319.50, "account_type": "roth"},
+        {"symbol": "GENI", "shares": 300, "cost_basis": 4.33, "account_type": "roth"},
+        {"symbol": "GXO", "shares": 100, "cost_basis": 0.00, "account_type": "roth"},
+        {"symbol": "HIMS", "shares": 30, "cost_basis": 41.67, "account_type": "roth"},
+        {"symbol": "HUBS", "shares": 20, "cost_basis": 115.38, "account_type": "roth"},
+        {"symbol": "HWM", "shares": 10, "cost_basis": 153.57, "account_type": "roth"},
+        {"symbol": "MDB", "shares": 100, "cost_basis": 56.60, "account_type": "roth"},
+        {"symbol": "MGNI", "shares": 500, "cost_basis": 6.22, "account_type": "roth"},
+        {"symbol": "OKTA", "shares": 100, "cost_basis": 29.82, "account_type": "roth"},
+        {"symbol": "OSCR", "shares": 150, "cost_basis": 14.27, "account_type": "roth"},
+        {"symbol": "PLTR", "shares": 100, "cost_basis": 40.35, "account_type": "roth"},
+        {"symbol": "RXO", "shares": 100, "cost_basis": 0.00, "account_type": "roth"},
+        {"symbol": "TSLA", "shares": 15, "cost_basis": 296.10, "account_type": "roth"},
+        {"symbol": "TWLO", "shares": 35, "cost_basis": 106.19, "account_type": "roth"},
+        {"symbol": "XPO", "shares": 100, "cost_basis": 27.97, "account_type": "roth"}
+    ]
+    
+    # Add each position with growth scoring
+    for pos in positions:
+        # Skip if position already exists
+        existing = [p for p in st.session_state.positions if p['symbol'] == pos['symbol'] and p['account_type'] == pos['account_type']]
+        if not existing:
+            score, category, _ = calculate_growth_score(pos['symbol'])
+            pos['growth_category'] = category
+            pos['growth_score'] = score
+            pos['added_date'] = datetime.now().isoformat()
+            st.session_state.positions.append(pos)
+    
+    # Save to file
+    save_json_data(POSITIONS_FILE, st.session_state.positions)
+
 def initialize_session_state():
     """Initialize session state variables"""
     if 'positions' not in st.session_state:
@@ -213,6 +269,12 @@ def bulk_import_positions():
 def add_position():
     """Add new position form"""
     st.subheader("Add New Position")
+    
+    # Quick load demo portfolio
+    if st.button("🚀 Load My Portfolio (One Click)", type="primary", help="Load Neal's complete portfolio"):
+        load_demo_portfolio()
+        st.success("✅ Loaded 34 positions!")
+        st.rerun()
     
     col1, col2 = st.columns(2)
     
