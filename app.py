@@ -336,10 +336,8 @@ def display_positions():
         st.info("No positions yet. Add your first position above!")
         return
     
-    positions_df = pd.DataFrame.from_dict(
-        st.session_state.positions, 
-        orient='index'
-    )
+    # Create DataFrame from list of positions
+    positions_df = pd.DataFrame(st.session_state.positions)
     
     for idx, row in positions_df.iterrows():
         col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 1])
