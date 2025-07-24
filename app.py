@@ -192,84 +192,60 @@ def display_monthly_progress():
         st.metric("Margin Debt", "$60,000", "-$2,800")
 
 def bulk_import_positions():
-    """Bulk import positions from text/CSV"""
+    """Bulk import positions from CSV file"""
     st.subheader("📋 Bulk Import Positions")
     
+    # Simple CSV file uploader
+    uploaded_file = st.file_uploader("Upload CSV file", type=['csv', 'txt'])
+    
     st.markdown("""
-    **Format:** Enter positions as CSV or paste from spreadsheet
+    **Simple format (4 columns):**
     ```
-    Symbol, Shares, Cost Basis, Account Type
-    AAPL, 100, 150.00, taxable
-    MSFT, 200, 300.00, roth
+    AAPL,100,150.00,taxable
+    MSFT,200,300.00,roth
     ```
     """)
     
-    import_text = st.text_area(
-        "Paste your positions here",
-        placeholder="AAPL, 100, 150.00, taxable\nMSFT, 200, 300.00, roth\nTSLA, 50, 800.00, taxable",
-        height=200
-    )
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        default_account = st.selectbox("Default Account (if not specified)", ["taxable", "roth"])
-    with col2:
-        if st.button("🚀 Import All", type="primary"):
-            if import_text:
-                lines = import_text.strip().split('\n')
-                imported = 0
-                errors = []
-                
-                for line in lines:
-                    try:
-                        # Skip header lines
-                        if 'symbol' in line.lower() or not line.strip():
-                            continue
-                            
-                        # Fix smart quotes and other special characters
-                        line = line.replace(''', "'").replace(''', "'").replace('"', '"').replace('"', '"')
-                        line = line.replace('′', "'").replace('‚', ',').replace('，', ',')  # Fix other common issues
+    if uploaded_file is not None:
+        try:
+            # Read the file
+            content = uploaded_file.read().decode('utf-8')
+            lines = content.strip().split('\n')
+            
+            imported = 0
+            for line in lines:
+                if line.strip():
+                    parts = line.split(',')
+                    if len(parts) >= 4:
+                        symbol = parts[0].strip().upper()
+                        shares = float(parts[1].strip())
+                        cost_basis = float(parts[2].strip())
+                        account_type = parts[3].strip().lower()
                         
-                        # Parse CSV line
-                        parts = [p.strip() for p in line.split(',')]
-                        if len(parts) >= 3:
-                            symbol = parts[0].upper()
-                            shares = int(float(parts[1]))
-                            cost_basis = float(parts[2])
-                            account = parts[3] if len(parts) > 3 else default_account
-                            
-                            # Calculate growth score
-                            score, category, _ = calculate_growth_score(symbol)
-                            
-                            # Add position
-                            position = {
-                                "symbol": symbol,
-                                "shares": shares,
-                                "cost_basis": cost_basis,
-                                "account_type": account,
-                                "growth_category": category,
-                                "growth_score": score,
-                                "added_date": datetime.now().isoformat()
-                            }
-                            
-                            st.session_state.positions.append(position)
-                            imported += 1
-                            
-                    except Exception as e:
-                        errors.append(f"Error on line '{line}': {str(e)}")
-                
-                # Save positions
-                if imported > 0:
-                    save_json_data(POSITIONS_FILE, st.session_state.positions)
-                    st.success(f"✅ Imported {imported} positions successfully!")
-                    
-                if errors:
-                    st.error("❌ Errors:")
-                    for error in errors:
-                        st.write(f"- {error}")
+                        # Get growth score
+                        score, category, _ = calculate_growth_score(symbol)
                         
-                if imported > 0:
-                    st.rerun()
+                        # Add position
+                        position = {
+                            "symbol": symbol,
+                            "shares": shares,
+                            "cost_basis": cost_basis,
+                            "account_type": account_type,
+                            "growth_category": category,
+                            "growth_score": score,
+                            "added_date": datetime.now().isoformat()
+                        }
+                        
+                        st.session_state.positions.append(position)
+                        imported += 1
+            
+            if imported > 0:
+                save_json_data(POSITIONS_FILE, st.session_state.positions)
+                st.success(f"✅ Imported {imported} positions!")
+                st.rerun()
+                
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
 
 def add_position():
     """Add new position form"""
