@@ -585,6 +585,39 @@ def get_growth_score(symbol: str, growth_category: str) -> int:
     }
     return scores.get(growth_category, 50)
 
+def calculate_greeks_score(greeks):
+    """Calculate a score based on Greeks favorability for covered calls"""
+    score = 5  # Start neutral
+    
+    # Delta scoring (lower is better for covered calls)
+    delta = abs(greeks.get('delta', 0))
+    if delta < 0.2:
+        score += 2  # Very low assignment risk
+    elif delta < 0.35:
+        score += 1  # Low assignment risk
+    elif delta > 0.5:
+        score -= 2  # High assignment risk
+    elif delta > 0.4:
+        score -= 1  # Moderate assignment risk
+    
+    # Theta scoring (higher is better - more decay)
+    theta = abs(greeks.get('theta', 0))
+    if theta > 0.05:
+        score += 2  # Excellent decay
+    elif theta > 0.02:
+        score += 1  # Good decay
+    elif theta < 0.01:
+        score -= 1  # Poor decay
+    
+    # Gamma scoring (lower is better - less risk)
+    gamma = greeks.get('gamma', 0)
+    if gamma < 0.02:
+        score += 1  # Low gamma risk
+    elif gamma > 0.05:
+        score -= 1  # High gamma risk
+    
+    return max(0, min(10, score))  # Keep between 0-10
+
 def analyze_covered_call_opportunity(position, call, current_price, iv_rank, growth_score, strike_multiplier, monthly_yield):
     """Analyze covered call opportunity and provide Motley Fool style recommendation"""
     
@@ -592,6 +625,10 @@ def analyze_covered_call_opportunity(position, call, current_price, iv_rank, gro
     upside_to_strike = ((call['strike'] - current_price) / current_price) * 100
     breakeven_price = current_price - call['ask']
     downside_protection = ((current_price - breakeven_price) / current_price) * 100
+    
+    # Greeks analysis
+    delta = abs(call.get('delta', 0))
+    theta = abs(call.get('theta', 0))
     
     # Initialize recommendation
     rec = {
@@ -657,6 +694,23 @@ def analyze_covered_call_opportunity(position, call, current_price, iv_rank, gro
     elif iv_rank < 30:
         rec['reasoning'] += f" | 💤 IV Rank {iv_rank:.0f}% = Wait for volatility"
     
+    # Add Greeks-based adjustments
+    if delta > 0:
+        if delta < 0.2:
+            rec['reasoning'] += f" | 🎯 Delta {delta:.2f} = Very low assignment risk"
+        elif delta > 0.5:
+            rec['reasoning'] += f" | ⚠️ Delta {delta:.2f} = High assignment risk"
+            if "YES" in rec['verdict'] and "STRONG" not in rec['verdict']:
+                rec['verdict'] = rec['verdict'].replace("YES", "MAYBE")
+                rec['conditional'] = "Consider rolling if stock rallies early"
+    
+    if theta > 0:
+        daily_decay = theta * 100  # Convert to dollars
+        if daily_decay > 5:
+            rec['reasoning'] += f" | 💰 Theta ${daily_decay:.2f}/day = Excellent decay"
+        elif daily_decay < 1:
+            rec['reasoning'] += f" | 🐌 Theta ${daily_decay:.2f}/day = Slow decay"
+    
     return rec
 
 def scan_covered_call_opportunities():
@@ -664,6 +718,9 @@ def scan_covered_call_opportunities():
     opportunities = []
     
     for position in st.session_state.positions:
+        # Skip positions with less than 100 shares
+        if position['shares'] < 100:
+            continue
         try:
             ticker = yf.Ticker(position['symbol'])
             current_price = ticker.info.get('currentPrice', 0)
@@ -725,6 +782,13 @@ def scan_covered_call_opportunities():
                                 strike_multiplier, monthly_yield
                             )
                             
+                            # Extract Greeks
+                            delta = call.get('delta', 0)
+                            theta = call.get('theta', 0)
+                            gamma = call.get('gamma', 0)
+                            vega = call.get('vega', 0)
+                            rho = call.get('rho', 0)
+                            
                             opportunities.append({
                                 'position_key': f"{position['symbol']}_{position['account_type']}",
                                 'symbol': position['symbol'],
@@ -744,7 +808,14 @@ def scan_covered_call_opportunities():
                                 'max_contracts': position['shares'] // 100,
                                 'growth_category': position['growth_category'],
                                 'recommendation': recommendation,
-                                'days_to_expiry': (datetime.strptime(best_date, '%Y-%m-%d') - datetime.now()).days
+                                'days_to_expiry': (datetime.strptime(best_date, '%Y-%m-%d') - datetime.now()).days,
+                                'greeks': {
+                                    'delta': delta,
+                                    'theta': theta,
+                                    'gamma': gamma,
+                                    'vega': vega,
+                                    'rho': rho
+                                }
                             })
                         
         except Exception as e:
@@ -789,6 +860,40 @@ def display_opportunity_card(opp: Dict):
             st.metric("Days to Exp", opp['days_to_expiry'])
         with col4:
             st.metric("IV Rank", f"{opp['iv_rank']:.0f}%")
+        
+        # Greeks section
+        if opp.get('greeks'):
+            st.markdown("**Greeks Analysis:**")
+            gcol1, gcol2, gcol3, gcol4, gcol5 = st.columns(5)
+            
+            with gcol1:
+                delta_val = abs(opp['greeks']['delta'])
+                delta_color = "🟢" if delta_val < 0.3 else "🟡" if delta_val < 0.5 else "🔴"
+                st.metric("Delta", f"{delta_color} {delta_val:.2f}", 
+                         help="Probability of finishing ITM")
+            
+            with gcol2:
+                theta_val = abs(opp['greeks']['theta'])
+                theta_daily = theta_val * 100  # Convert to dollars per contract
+                st.metric("Theta", f"${theta_daily:.2f}/day",
+                         help="Daily time decay income")
+            
+            with gcol3:
+                gamma_val = opp['greeks']['gamma']
+                gamma_risk = "Low" if gamma_val < 0.02 else "Med" if gamma_val < 0.05 else "High"
+                st.metric("Gamma", f"{gamma_val:.3f}",
+                         help=f"Delta change risk: {gamma_risk}")
+            
+            with gcol4:
+                vega_val = abs(opp['greeks']['vega'])
+                st.metric("Vega", f"${vega_val:.2f}",
+                         help="Price change per 1% IV move")
+            
+            with gcol5:
+                # Calculate Greeks-based score
+                greeks_score = calculate_greeks_score(opp['greeks'])
+                st.metric("Greeks Score", f"{greeks_score}/10",
+                         help="Overall Greeks favorability")
         
         # Recommendation section
         st.markdown("---")
@@ -865,6 +970,13 @@ def main():
     tab1, tab2, tab3, tab4 = st.tabs(["🎯 Opportunities", "📊 Positions", "🚀 Growth Scanner", "👁️ WatchList"])
     
     with tab1:
+        # Show positions that can't sell calls
+        insufficient_shares = [p for p in st.session_state.positions if p['shares'] < 100]
+        if insufficient_shares:
+            with st.expander(f"ℹ️ {len(insufficient_shares)} positions with <100 shares (can't sell calls)", expanded=False):
+                for pos in insufficient_shares:
+                    st.write(f"• **{pos['symbol']}**: {pos['shares']} shares (need {100 - pos['shares']} more)")
+        
         if st.button("🔄 Scan for Opportunities"):
             with st.spinner("Scanning positions..."):
                 opportunities = scan_covered_call_opportunities()
