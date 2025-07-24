@@ -165,8 +165,9 @@ def bulk_import_positions():
                         if 'symbol' in line.lower() or not line.strip():
                             continue
                             
-                        # Fix smart quotes issue
+                        # Fix smart quotes and other special characters
                         line = line.replace(''', "'").replace(''', "'").replace('"', '"').replace('"', '"')
+                        line = line.replace('′', "'").replace('‚', ',').replace('，', ',')  # Fix other common issues
                         
                         # Parse CSV line
                         parts = [p.strip() for p in line.split(',')]
