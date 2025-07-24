@@ -371,7 +371,7 @@ def display_positions():
     positions_df = pd.DataFrame(st.session_state.positions)
     
     for idx, row in positions_df.iterrows():
-        col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 1])
+        col1, col2, col3, col4, col5, col6 = st.columns([2, 1, 1, 1, 1, 1])
         
         with col1:
             st.write(f"**{row['symbol']}** ({row['account_type'].upper()})")
@@ -382,10 +382,52 @@ def display_positions():
         with col4:
             st.write(row['growth_category'])
         with col5:
-            if st.button(f"Delete", key=f"del_{idx}"):
+            if st.button("✏️ Edit", key=f"edit_{idx}"):
+                st.session_state[f'editing_{idx}'] = True
+                st.rerun()
+        with col6:
+            if st.button("🗑️", key=f"del_{idx}"):
                 del st.session_state.positions[idx]
                 save_json_data(POSITIONS_FILE, st.session_state.positions)
                 st.rerun()
+        
+        # Show edit form if editing this position
+        if st.session_state.get(f'editing_{idx}', False):
+            with st.expander("Edit Position", expanded=True):
+                edit_col1, edit_col2, edit_col3, edit_col4 = st.columns(4)
+                
+                with edit_col1:
+                    new_shares = st.number_input("Shares", value=float(row['shares']), key=f"shares_{idx}")
+                with edit_col2:
+                    new_cost = st.number_input("Cost Basis", value=float(row['cost_basis']), key=f"cost_{idx}")
+                with edit_col3:
+                    new_account = st.selectbox("Account", ["taxable", "roth"], 
+                                              index=0 if row['account_type'] == "taxable" else 1,
+                                              key=f"account_{idx}")
+                with edit_col4:
+                    button_col1, button_col2 = st.columns(2)
+                    with button_col1:
+                        if st.button("💾 Save", key=f"save_{idx}", type="primary"):
+                            # Update position
+                            st.session_state.positions[idx]['shares'] = new_shares
+                            st.session_state.positions[idx]['cost_basis'] = new_cost
+                            st.session_state.positions[idx]['account_type'] = new_account
+                            
+                            # Recalculate growth score
+                            score, category, _ = calculate_growth_score(row['symbol'])
+                            st.session_state.positions[idx]['growth_category'] = category
+                            st.session_state.positions[idx]['growth_score'] = score
+                            
+                            # Save and clear edit state
+                            save_json_data(POSITIONS_FILE, st.session_state.positions)
+                            st.session_state[f'editing_{idx}'] = False
+                            st.success("Position updated!")
+                            st.rerun()
+                    
+                    with button_col2:
+                        if st.button("❌ Cancel", key=f"cancel_{idx}"):
+                            st.session_state[f'editing_{idx}'] = False
+                            st.rerun()
 
 def calculate_iv_rank(symbol: str, current_iv: float) -> float:
     """Calculate IV rank (simplified for Phase 1)"""
