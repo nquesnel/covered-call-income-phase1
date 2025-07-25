@@ -7,8 +7,8 @@
 :root {
     --bg-primary: #0A0E1A;
     --bg-secondary: #0F1420;
-    --bg-card: rgba(30, 42, 58, 0.6);
-    --bg-card-hover: rgba(30, 42, 58, 0.8);
+    --bg-card: rgba(30, 42, 58, 0.8);
+    --bg-card-hover: rgba(30, 42, 58, 0.95);
     --accent-blue: #00D2FF;
     --accent-blue-glow: 0 0 20px rgba(0, 210, 255, 0.6);
     --success-green: #39FF14;
@@ -17,8 +17,8 @@
     --warning-glow: 0 0 15px rgba(255, 107, 53, 0.5);
     --danger-red: #FF073A;
     --danger-glow: 0 0 15px rgba(255, 7, 58, 0.5);
-    --text-primary: #E8F0FE;
-    --text-secondary: #94A3B8;
+    --text-primary: #FFFFFF;
+    --text-secondary: #B8C5D6;
     --border-color: rgba(0, 210, 255, 0.3);
 }
 
@@ -28,6 +28,8 @@
     background-attachment: fixed;
     color: var(--text-primary);
     font-family: 'Rajdhani', sans-serif;
+    font-weight: 500;
+    font-size: 1.05rem;
 }
 
 /* Hide Streamlit branding */
@@ -58,8 +60,9 @@
 .stApp > div > div > div > div > div:first-child p {
     font-family: 'JetBrains Mono', monospace;
     text-align: center;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-size: 1.1rem;
+    font-weight: 600;
     letter-spacing: 1px;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 20px;
@@ -68,7 +71,7 @@
 
 /* Metric Cards - Glassmorphism Effect */
 [data-testid="metric-container"] {
-    background: var(--bg-card);
+    background: rgba(20, 25, 40, 0.9);
     backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
     border-radius: 16px;
@@ -79,7 +82,7 @@
 }
 
 [data-testid="metric-container"]:hover {
-    background: var(--bg-card-hover);
+    background: rgba(25, 30, 45, 0.95);
     transform: translateY(-2px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6),
                 var(--accent-blue-glow);
@@ -87,8 +90,8 @@
 
 [data-testid="metric-container"] label {
     font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
-    color: var(--text-secondary);
+    font-weight: 700;
+    color: var(--text-primary);
     text-transform: uppercase;
     letter-spacing: 1px;
     font-size: 0.9rem;
@@ -118,7 +121,7 @@
 
 /* Tab Navigation */
 .stTabs [data-baseweb="tab-list"] {
-    background: var(--bg-card);
+    background: rgba(20, 25, 40, 0.9);
     backdrop-filter: blur(10px);
     border-radius: 12px;
     padding: 8px;
@@ -128,9 +131,9 @@
 
 .stTabs [data-baseweb="tab"] {
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1.1rem;
     letter-spacing: 1px;
     border-radius: 8px;
@@ -224,7 +227,7 @@
 .stTextInput label,
 .stSelectbox label,
 .stNumberInput label {
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-family: 'Rajdhani', sans-serif;
     font-weight: 600;
     text-transform: uppercase;
@@ -502,6 +505,28 @@ h3 { color: var(--text-primary); }
 .block-container {
     padding-top: 2rem;
     max-width: 1400px;
+}
+
+/* Make all text more readable */
+.stMarkdown, .stText {
+    color: var(--text-primary) !important;
+    font-weight: 500;
+}
+
+/* Ensure all paragraph text is readable */
+p {
+    color: var(--text-primary) !important;
+}
+
+/* Make write output text white */
+.stWrite, [data-testid="stMarkdownContainer"] {
+    color: var(--text-primary) !important;
+}
+
+/* Info boxes text */
+.stAlert > div {
+    color: var(--text-primary) !important;
+    font-weight: 600;
 }
 
 /* Quantum particles background effect */

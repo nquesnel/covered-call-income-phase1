@@ -1166,7 +1166,7 @@ def main():
     
     # Mission Status Bar
     st.markdown("""
-    <p style='text-align: center; color: #94A3B8; font-family: "JetBrains Mono", monospace;'>
+    <p style='text-align: center; color: #FFFFFF; font-family: "JetBrains Mono", monospace; font-weight: 600;'>
     MISSION: GENERATE $2-5K MONTHLY INCOME | TARGET: $60K MARGIN DEBT ELIMINATION | STATUS: ACTIVE
     </p>
     """, unsafe_allow_html=True)
