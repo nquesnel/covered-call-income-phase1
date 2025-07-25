@@ -476,10 +476,15 @@ def add_position_form():
             st.rerun()
 
 def display_positions():
-    """Display current positions"""
+    """Display premium portfolio command center"""
+    
+    # Portfolio Summary Header
+    portfolio_data = display_portfolio_summary()
+    
+    # Position Controls
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.subheader("Current Positions")
+        st.markdown("## 📊 PORTFOLIO POSITIONS")
     with col2:
         col2a, col2b = st.columns(2)
         with col2a:
@@ -510,67 +515,307 @@ def display_positions():
         st.info("No positions yet. Add your first position above!")
         return
     
-    # Create DataFrame from list of positions
-    positions_df = pd.DataFrame(st.session_state.positions)
+    # Display positions as premium trading cards
+    # Create 3-column layout for cards
+    positions = st.session_state.positions
+    cols_per_row = 3
     
-    for idx, row in positions_df.iterrows():
-        col1, col2, col3, col4, col5, col6 = st.columns([2, 1, 1, 1, 1, 1])
+    for i in range(0, len(positions), cols_per_row):
+        cols = st.columns(cols_per_row)
         
-        with col1:
-            st.write(f"**{row['symbol']}** ({row['account_type'].upper()})")
-        with col2:
-            st.write(f"{row['shares']} shares")
-        with col3:
-            st.write(f"${row['cost_basis']:.2f}")
-        with col4:
-            st.write(row['growth_category'])
-        with col5:
-            if st.button("✏️ Edit", key=f"edit_{idx}"):
-                st.session_state[f'editing_{idx}'] = True
-                st.rerun()
-        with col6:
-            if st.button("🗑️", key=f"del_{idx}"):
-                del st.session_state.positions[idx]
-                save_json_data(POSITIONS_FILE, st.session_state.positions)
-                st.rerun()
+        for j in range(cols_per_row):
+            if i + j < len(positions):
+                with cols[j]:
+                    display_position_card(positions[i + j], i + j, portfolio_data['total_value'])
+
+def display_portfolio_summary():
+    """Display premium portfolio summary header"""
+    # Calculate portfolio metrics
+    total_value = 0
+    total_cost = 0
+    total_pnl = 0
+    best_performer = None
+    worst_performer = None
+    best_pnl_pct = -float('inf')
+    worst_pnl_pct = float('inf')
+    
+    for pos in st.session_state.positions:
+        try:
+            ticker = yf.Ticker(pos['symbol'])
+            current_price = ticker.info.get('currentPrice', pos['cost_basis'])
+            position_value = current_price * pos['shares']
+            position_cost = pos['cost_basis'] * pos['shares']
+            position_pnl = position_value - position_cost
+            pnl_pct = (position_pnl / position_cost * 100) if position_cost > 0 else 0
+            
+            total_value += position_value
+            total_cost += position_cost
+            total_pnl += position_pnl
+            
+            if pnl_pct > best_pnl_pct:
+                best_pnl_pct = pnl_pct
+                best_performer = pos['symbol']
+            if pnl_pct < worst_pnl_pct:
+                worst_pnl_pct = pnl_pct
+                worst_performer = pos['symbol']
+        except:
+            pass
+    
+    # Portfolio summary container
+    st.markdown("""
+    <div style="
+        background: linear-gradient(135deg, rgba(0, 210, 255, 0.1), rgba(57, 255, 20, 0.1));
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(0, 210, 255, 0.3);
+        backdrop-filter: blur(15px);
+    ">
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("💼 PORTFOLIO VALUE", f"${total_value:,.2f}", f"${total_pnl:+,.2f}")
         
-        # Show edit form if editing this position
-        if st.session_state.get(f'editing_{idx}', False):
-            with st.expander("Edit Position", expanded=True):
-                edit_col1, edit_col2, edit_col3, edit_col4 = st.columns(4)
+    with col2:
+        pnl_pct = (total_pnl / total_cost * 100) if total_cost > 0 else 0
+        pnl_color = "#39FF14" if pnl_pct >= 0 else "#FF073A"
+        st.metric("📈 TOTAL RETURN", f"{pnl_pct:+.2f}%", f"${total_pnl:+,.2f}")
+        
+    with col3:
+        if best_performer:
+            st.metric("🚀 BEST PERFORMER", best_performer, f"{best_pnl_pct:+.1f}%")
+        else:
+            st.metric("🚀 BEST PERFORMER", "—", "—")
+            
+    with col4:
+        if worst_performer:
+            st.metric("📉 WORST PERFORMER", worst_performer, f"{worst_pnl_pct:+.1f}%")
+        else:
+            st.metric("📉 WORST PERFORMER", "—", "—")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    return {
+        'total_value': total_value,
+        'total_cost': total_cost,
+        'total_pnl': total_pnl,
+        'best_performer': best_performer,
+        'worst_performer': worst_performer
+    }
+
+def display_position_card(position, idx, total_portfolio_value):
+    """Display a single position as a premium trading card"""
+    try:
+        # Fetch current data
+        ticker = yf.Ticker(position['symbol'])
+        info = ticker.info
+        current_price = info.get('currentPrice', position['cost_basis'])
+        
+        # Calculate metrics
+        position_value = current_price * position['shares']
+        position_cost = position['cost_basis'] * position['shares']
+        position_pnl = position_value - position_cost
+        pnl_pct = (position_pnl / position_cost * 100) if position_cost > 0 else 0
+        
+        # Calculate portfolio percentage
+        portfolio_pct = (position_value / total_portfolio_value * 100) if total_portfolio_value > 0 else 0
+        
+        # Get price history for sparkline
+        hist = ticker.history(period="1mo", interval="1d")
+        
+        # Determine colors based on profit/loss and strategy
+        if pnl_pct >= 0:
+            border_color = "#39FF14"  # Green for profit
+            pnl_emoji = "📈"
+        else:
+            border_color = "#FF073A"  # Red for loss
+            pnl_emoji = "📉"
+            
+        # Strategy colors
+        strategy_colors = {
+            "AGGRESSIVE": {"bg": "#FF073A", "glow": "0 0 20px rgba(255, 7, 58, 0.4)"},
+            "MODERATE": {"bg": "#FF6B35", "glow": "0 0 20px rgba(255, 107, 53, 0.4)"},
+            "CONSERVATIVE": {"bg": "#00D2FF", "glow": "0 0 20px rgba(0, 210, 255, 0.4)"}
+        }
+        
+        strategy = position.get('growth_category', 'MODERATE')
+        strategy_style = strategy_colors.get(strategy, strategy_colors['MODERATE'])
+        
+        # Risk indicator
+        growth_score = position.get('growth_score', 50)
+        risk_level = "HIGH" if growth_score > 70 else "MEDIUM" if growth_score > 40 else "LOW"
+        
+    except Exception as e:
+        current_price = position['cost_basis']
+        position_value = current_price * position['shares']
+        position_cost = position['cost_basis'] * position['shares']
+        position_pnl = 0
+        pnl_pct = 0
+        border_color = "#00D2FF"
+        pnl_emoji = "—"
+        strategy = "MODERATE"
+        strategy_style = strategy_colors['MODERATE']
+        risk_level = "MEDIUM"
+        growth_score = 50
+    
+    # Trading card container
+    st.markdown(f"""
+    <div style="
+        background: rgba(20, 25, 40, 0.9);
+        backdrop-filter: blur(15px);
+        border-left: 4px solid {border_color};
+        border-radius: 16px;
+        padding: 20px;
+        margin: 10px 0;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                   {strategy_style['glow']};
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 320px;
+    "
+    onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 40px rgba(0, 0, 0, 0.6), {strategy_style['glow']}';"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 32px rgba(0, 0, 0, 0.4), {strategy_style['glow']}';">
+        
+        <!-- Strategy Badge -->
+        <div style="
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: {strategy_style['bg']};
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        ">{strategy}</div>
+        
+        <!-- Stock Symbol -->
+        <h2 style="
+            font-family: 'Orbitron', monospace;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: {border_color};
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 20px {border_color};
+        ">{position['symbol']}</h2>
+        
+        <!-- Account Type -->
+        <p style="
+            color: #B8C5D6;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 15px 0;
+        ">{position['account_type'].upper()} ACCOUNT</p>
+        
+        <!-- Portfolio Percentage -->
+        <div style="
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: #00D2FF;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        ">{portfolio_pct:.1f}% of portfolio</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Price and P&L Section
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Current Price", f"${current_price:.2f}", f"{pnl_emoji} {pnl_pct:+.1f}%")
+    with col2:
+        st.metric("P&L", f"${position_pnl:+,.2f}", f"{position['shares']} shares")
+    
+    # Position Details
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Cost Basis", f"${position['cost_basis']:.2f}")
+    with col2:
+        st.metric("Total Value", f"${position_value:,.2f}")
+    
+    # Risk Meter
+    st.markdown(f"""
+    <div style="margin: 10px 0;">
+        <p style="color: #B8C5D6; font-size: 0.9rem; margin-bottom: 5px;">RISK LEVEL: {risk_level}</p>
+        <div style="
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+        ">
+            <div style="
+                background: linear-gradient(90deg, #00D2FF, #FF6B35, #FF073A);
+                height: 100%;
+                width: {growth_score}%;
+                transition: width 0.5s ease;
+            "></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Action Buttons
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        if st.button("📊", key=f"analyze_{idx}", help="Analyze"):
+            st.session_state[f'analyzing_{idx}'] = True
+    with col2:
+        if st.button("⚡", key=f"trade_{idx}", help="Trade Options"):
+            st.session_state[f'trading_{idx}'] = True
+    with col3:
+        if st.button("✏️", key=f"edit_{idx}", help="Edit"):
+            st.session_state[f'editing_{idx}'] = True
+            st.rerun()
+    with col4:
+        if st.button("🗑️", key=f"del_{idx}", help="Delete"):
+            del st.session_state.positions[idx]
+            save_json_data(POSITIONS_FILE, st.session_state.positions)
+            st.rerun()
+    
+    # Edit form (if editing)
+    if st.session_state.get(f'editing_{idx}', False):
+        with st.expander("Edit Position", expanded=True):
+            edit_col1, edit_col2 = st.columns(2)
+            
+            with edit_col1:
+                new_shares = st.number_input("Shares", value=float(position['shares']), key=f"shares_{idx}")
+                new_cost = st.number_input("Cost Basis", value=float(position['cost_basis']), key=f"cost_{idx}")
                 
-                with edit_col1:
-                    new_shares = st.number_input("Shares", value=float(row['shares']), key=f"shares_{idx}")
-                with edit_col2:
-                    new_cost = st.number_input("Cost Basis", value=float(row['cost_basis']), key=f"cost_{idx}")
-                with edit_col3:
-                    new_account = st.selectbox("Account", ["taxable", "roth"], 
-                                              index=0 if row['account_type'] == "taxable" else 1,
-                                              key=f"account_{idx}")
-                with edit_col4:
-                    button_col1, button_col2 = st.columns(2)
-                    with button_col1:
-                        if st.button("💾 Save", key=f"save_{idx}", type="primary"):
-                            # Update position
-                            st.session_state.positions[idx]['shares'] = new_shares
-                            st.session_state.positions[idx]['cost_basis'] = new_cost
-                            st.session_state.positions[idx]['account_type'] = new_account
-                            
-                            # Recalculate growth score
-                            score, category, _ = calculate_growth_score(row['symbol'])
-                            st.session_state.positions[idx]['growth_category'] = category
-                            st.session_state.positions[idx]['growth_score'] = score
-                            
-                            # Save and clear edit state
-                            save_json_data(POSITIONS_FILE, st.session_state.positions)
-                            st.session_state[f'editing_{idx}'] = False
-                            st.success("Position updated!")
-                            st.rerun()
-                    
-                    with button_col2:
-                        if st.button("❌ Cancel", key=f"cancel_{idx}"):
-                            st.session_state[f'editing_{idx}'] = False
-                            st.rerun()
+            with edit_col2:
+                new_account = st.selectbox("Account", ["taxable", "roth"], 
+                                          index=0 if position['account_type'] == "taxable" else 1,
+                                          key=f"account_{idx}")
+                
+                button_col1, button_col2 = st.columns(2)
+                with button_col1:
+                    if st.button("💾 Save", key=f"save_{idx}", type="primary"):
+                        # Update position
+                        st.session_state.positions[idx]['shares'] = new_shares
+                        st.session_state.positions[idx]['cost_basis'] = new_cost
+                        st.session_state.positions[idx]['account_type'] = new_account
+                        
+                        # Recalculate growth score
+                        score, category, _ = calculate_growth_score(position['symbol'])
+                        st.session_state.positions[idx]['growth_category'] = category
+                        st.session_state.positions[idx]['growth_score'] = score
+                        
+                        # Save and clear edit state
+                        save_json_data(POSITIONS_FILE, st.session_state.positions)
+                        st.session_state[f'editing_{idx}'] = False
+                        st.success("Position updated!")
+                        st.rerun()
+                
+                with button_col2:
+                    if st.button("❌ Cancel", key=f"cancel_{idx}"):
+                        st.session_state[f'editing_{idx}'] = False
+                        st.rerun()
 
 def calculate_iv_rank(symbol: str, current_iv: float) -> float:
     """Calculate IV rank (simplified for Phase 1)"""

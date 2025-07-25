@@ -529,6 +529,82 @@ p {
     font-weight: 600;
 }
 
+/* Position Card Enhancements */
+.position-card {
+    transition: all 0.3s ease !important;
+}
+
+.position-card:hover {
+    transform: translateY(-5px) !important;
+}
+
+/* Small Icon Buttons */
+.stButton > button[title] {
+    padding: 8px !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    font-size: 1.2rem !important;
+}
+
+/* Risk Meter Animation */
+@keyframes riskPulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+}
+
+.risk-meter {
+    animation: riskPulse 2s ease-in-out infinite;
+}
+
+/* Portfolio Summary Glow */
+.portfolio-summary {
+    animation: glow 3s ease-in-out infinite;
+}
+
+/* Sparkline Container */
+.sparkline-container {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+/* Strategy Badge Animations */
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.strategy-badge {
+    animation: badgePulse 3s ease-in-out infinite;
+}
+
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-blue), var(--success-green));
+    box-shadow: var(--accent-blue-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--bg-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.fab:hover {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 0 30px rgba(0, 210, 255, 0.8);
+}
+
 /* Quantum particles background effect */
 .stApp::before {
     content: '';
