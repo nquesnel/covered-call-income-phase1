@@ -911,17 +911,19 @@ def display_opportunity_card(opp: Dict):
         col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
         
         with col1:
-            if st.button("✅ TAKE", key=f"take_{opp['position_key']}_{opp['strike']}_{opp['days_to_expiry']}"):
+            # Use more unique key including expiration date and index
+            unique_key = f"{opp['position_key']}_{opp['strike']}_{opp['expiration']}_{opp.get('_index', 0)}"
+            if st.button("✅ TAKE", key=f"take_{unique_key}"):
                 st.session_state.show_take_dialog = opp
                 
         with col2:
-            if st.button("❌ PASS", key=f"pass_{opp['position_key']}_{opp['strike']}_{opp['days_to_expiry']}"):
+            if st.button("❌ PASS", key=f"pass_{unique_key}"):
                 record_decision(opp, "PASS", 0, opp['premium'], opp['recommendation']['reasoning'])
                 st.success("Decision recorded!")
                 st.rerun()
                 
         with col3:
-            if st.button("📌 WATCH", key=f"watch_{opp['position_key']}_{opp['strike']}_{opp['days_to_expiry']}"):
+            if st.button("📌 WATCH", key=f"watch_{unique_key}"):
                 # Add to a covered call watchlist
                 if 'cc_watchlist' not in st.session_state:
                     st.session_state.cc_watchlist = []
@@ -1045,7 +1047,8 @@ def main():
                 st.markdown("---")
                 
                 # Display filtered opportunities
-                for opp in filtered_opps:
+                for idx, opp in enumerate(filtered_opps):
+                    opp['_index'] = idx  # Add index for unique keys
                     display_opportunity_card(opp)
                     st.markdown("---")
             else:
