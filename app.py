@@ -103,6 +103,8 @@ def initialize_session_state():
         st.session_state.decisions = load_json_data(DECISIONS_FILE)
     if 'growth_screener' not in st.session_state:
         st.session_state.growth_screener = GrowthScreeningSystem()
+    if 'active_options' not in st.session_state:
+        st.session_state.active_options = load_json_data("active_options.json", [])
 
 def check_21_50_7_alerts() -> List[Dict]:
     """Check for 21-50-7 rule violations"""
@@ -191,69 +193,166 @@ def display_monthly_progress():
     with col4:
         st.metric("Margin Debt", "$60,000", "-$2,800")
 
+def add_option_trade():
+    """Add active option trade"""
+    with st.expander("🎯 Add Option Trade", expanded=True):
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            symbol = st.text_input("Symbol", placeholder="TSLA")
+            option_type = st.selectbox("Type", ["COVERED CALL", "CASH SECURED PUT", "LONG CALL", "LONG PUT"])
+            strike = st.number_input("Strike Price", min_value=0.0, value=100.0, step=1.0)
+        
+        with col2:
+            expiration = st.date_input("Expiration Date")
+            contracts = st.number_input("Contracts", min_value=1, value=1, step=1)
+            premium = st.number_input("Premium Collected/Paid", value=1.0, step=0.01)
+        
+        with col3:
+            fill_price = st.number_input("Fill Price", value=1.0, step=0.01)
+            account = st.selectbox("Account", ["taxable", "roth"])
+            notes = st.text_area("Notes", placeholder="Earnings play, high IV...")
+        
+        if st.button("➕ Add Option Trade", type="primary"):
+            if symbol and strike > 0:
+                option_trade = {
+                    "id": f"{symbol}_{strike}_{expiration}_{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    "symbol": symbol.upper(),
+                    "type": option_type,
+                    "strike": strike,
+                    "expiration": expiration.strftime("%Y-%m-%d"),
+                    "contracts": contracts,
+                    "premium": premium,
+                    "fill_price": fill_price,
+                    "account": account,
+                    "notes": notes,
+                    "opened_date": datetime.now().strftime("%Y-%m-%d"),
+                    "status": "ACTIVE",
+                    "pnl": 0
+                }
+                
+                st.session_state.active_options.append(option_trade)
+                save_json_data("active_options.json", st.session_state.active_options)
+                st.success(f"Added {option_type} for {symbol}")
+                st.rerun()
+
+def display_active_options():
+    """Display active options positions"""
+    if not st.session_state.active_options:
+        st.info("No active options positions. Track your covered calls here!")
+        return
+    
+    # Summary metrics
+    active_calls = [o for o in st.session_state.active_options if "CALL" in o['type'] and o['status'] == "ACTIVE"]
+    active_puts = [o for o in st.session_state.active_options if "PUT" in o['type'] and o['status'] == "ACTIVE"]
+    total_premium = sum(o['premium'] * o['contracts'] * 100 for o in st.session_state.active_options if o['status'] == "ACTIVE")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Active Calls", len(active_calls))
+    with col2:
+        st.metric("Active Puts", len(active_puts))
+    with col3:
+        st.metric("Total Premium", f"${total_premium:,.2f}")
+    with col4:
+        st.metric("At Risk", len([o for o in st.session_state.active_options if o['status'] == "ACTIVE"]))
+    
+    # Active positions table
+    for option in st.session_state.active_options:
+        if option['status'] == "ACTIVE":
+            exp_date = datetime.strptime(option['expiration'], "%Y-%m-%d")
+            days_to_exp = (exp_date - datetime.now()).days
+            
+            col1, col2, col3, col4, col5, col6 = st.columns([2, 1, 1, 1, 1, 1])
+            
+            with col1:
+                st.write(f"**{option['symbol']}** {option['type']}")
+            with col2:
+                st.write(f"${option['strike']}")
+            with col3:
+                st.write(f"{option['expiration']} ({days_to_exp}d)")
+            with col4:
+                st.write(f"{option['contracts']} x ${option['premium']:.2f}")
+            with col5:
+                if days_to_exp <= 7:
+                    st.write("🔴 EXPIRING")
+                elif days_to_exp <= 21:
+                    st.write("🟡 MANAGE")
+                else:
+                    st.write("🟢 ACTIVE")
+            with col6:
+                if st.button("Close", key=f"close_{option['id']}"):
+                    option['status'] = "CLOSED"
+                    option['closed_date'] = datetime.now().strftime("%Y-%m-%d")
+                    save_json_data("active_options.json", st.session_state.active_options)
+                    st.rerun()
+
 def bulk_import_positions():
     """Bulk import positions from CSV file"""
-    st.subheader("📋 Bulk Import Positions")
-    
-    # Simple CSV file uploader
-    uploaded_file = st.file_uploader("Upload CSV file", type=['csv', 'txt'])
-    
-    st.markdown("""
-    **Simple format (4 columns):**
-    ```
-    AAPL,100,150.00,taxable
-    MSFT,200,300.00,roth
-    ```
-    """)
-    
-    if uploaded_file is not None:
-        try:
-            # Read the file
-            content = uploaded_file.read().decode('utf-8')
-            lines = content.strip().split('\n')
-            
-            imported = 0
-            for line in lines:
-                if line.strip():
-                    parts = line.split(',')
-                    if len(parts) >= 4:
-                        symbol = parts[0].strip().upper()
-                        shares = float(parts[1].strip())
-                        cost_basis = float(parts[2].strip())
-                        account_type = parts[3].strip().lower()
-                        
-                        # Get growth score
-                        score, category, _ = calculate_growth_score(symbol)
-                        
-                        # Add position
-                        position = {
-                            "symbol": symbol,
-                            "shares": shares,
-                            "cost_basis": cost_basis,
-                            "account_type": account_type,
-                            "growth_category": category,
-                            "growth_score": score,
-                            "added_date": datetime.now().isoformat()
-                        }
-                        
-                        # Check if position already exists
-                        exists = any(p['symbol'] == symbol and p['account_type'] == account_type 
-                                   for p in st.session_state.positions)
-                        if not exists:
-                            st.session_state.positions.append(position)
-                            imported += 1
-            
-            if imported > 0:
-                save_json_data(POSITIONS_FILE, st.session_state.positions)
-                st.success(f"✅ Imported {imported} positions!")
-                st.rerun()
+    with st.expander("📋 Bulk Import Positions", expanded=False):
+        # Simple CSV file uploader
+        uploaded_file = st.file_uploader("Upload CSV file", type=['csv', 'txt'])
+        
+        st.markdown("""
+        **Simple format (4 columns):**
+        ```
+        AAPL,100,150.00,taxable
+        MSFT,200,300.00,roth
+        ```
+        """)
+        
+        if uploaded_file is not None:
+            try:
+                # Read the file
+                content = uploaded_file.read().decode('utf-8')
+                lines = content.strip().split('\n')
                 
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+                imported = 0
+                for line in lines:
+                    if line.strip():
+                        parts = line.split(',')
+                        if len(parts) >= 4:
+                            symbol = parts[0].strip().upper()
+                            shares = float(parts[1].strip())
+                            cost_basis = float(parts[2].strip())
+                            account_type = parts[3].strip().lower()
+                            
+                            # Get growth score
+                            score, category, _ = calculate_growth_score(symbol)
+                            
+                            # Add position
+                            position = {
+                                "symbol": symbol,
+                                "shares": shares,
+                                "cost_basis": cost_basis,
+                                "account_type": account_type,
+                                "growth_category": category,
+                                "growth_score": score,
+                                "added_date": datetime.now().isoformat()
+                            }
+                            
+                            # Check if position already exists
+                            exists = any(p['symbol'] == symbol and p['account_type'] == account_type 
+                                       for p in st.session_state.positions)
+                            if not exists:
+                                st.session_state.positions.append(position)
+                                imported += 1
+                
+                if imported > 0:
+                    save_json_data(POSITIONS_FILE, st.session_state.positions)
+                    st.success(f"✅ Imported {imported} positions!")
+                    st.rerun()
+                    
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
 
 def add_position():
     """Add new position form"""
-    st.subheader("Add New Position")
+    with st.expander("➕ Add New Position", expanded=False):
+        add_position_form()
+
+def add_position_form():
+    """The actual form for adding positions"""
     
     # Quick load demo portfolio
     if st.button("🚀 Load My Portfolio (One Click)", type="primary", help="Load Neal's complete portfolio"):
@@ -1090,13 +1189,19 @@ def main():
                     st.rerun()
     
     with tab2:
+        # Options tracking section
+        with st.expander("📊 Active Options Positions", expanded=True):
+            display_active_options()
+        
         # Toggle between single add and bulk import
-        import_mode = st.radio("Add Method", ["➕ Single Position", "📋 Bulk Import"], horizontal=True)
+        import_mode = st.radio("Add Method", ["➕ Single Position", "📋 Bulk Import", "🎯 Add Option Trade"], horizontal=True)
         
         if import_mode == "➕ Single Position":
             add_position()
-        else:
+        elif import_mode == "📋 Bulk Import":
             bulk_import_positions()
+        else:
+            add_option_trade()
             
         st.markdown("---")
         display_positions()
