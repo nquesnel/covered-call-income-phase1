@@ -3,33 +3,50 @@
 /* Import futuristic fonts */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
-/* Root variables */
+/* Root variables - HIGH CONTRAST */
 :root {
     --bg-primary: #0A0E1A;
     --bg-secondary: #0F1420;
-    --bg-card: rgba(30, 42, 58, 0.8);
-    --bg-card-hover: rgba(30, 42, 58, 0.95);
+    --bg-card: rgba(20, 25, 35, 0.9);
+    --bg-card-hover: rgba(25, 30, 40, 0.95);
     --accent-blue: #00D2FF;
     --accent-blue-glow: 0 0 20px rgba(0, 210, 255, 0.6);
-    --success-green: #39FF14;
-    --success-glow: 0 0 15px rgba(57, 255, 20, 0.5);
-    --warning-orange: #FF6B35;
-    --warning-glow: 0 0 15px rgba(255, 107, 53, 0.5);
-    --danger-red: #FF073A;
-    --danger-glow: 0 0 15px rgba(255, 7, 58, 0.5);
+    --success-green: #10B981;
+    --success-glow: 0 0 15px rgba(16, 185, 129, 0.5);
+    --warning-orange: #F59E0B;
+    --warning-glow: 0 0 15px rgba(245, 158, 11, 0.5);
+    --danger-red: #EF4444;
+    --danger-glow: 0 0 15px rgba(239, 68, 68, 0.5);
     --text-primary: #FFFFFF;
-    --text-secondary: #B8C5D6;
+    --text-secondary: #E0E6ED;
+    --text-muted: #9CA3AF;
     --border-color: rgba(0, 210, 255, 0.3);
+    
+    /* Typography sizes */
+    --font-xxl: 24px;
+    --font-xl: 20px;
+    --font-lg: 18px;
+    --font-md: 16px;
+    --font-base: 14px;
+    --font-sm: 12px;
+    
+    /* Spacing */
+    --space-xs: 8px;
+    --space-sm: 12px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
 }
 
-/* Global styles */
+/* Global styles - IMPROVED READABILITY */
 .stApp {
     background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
     background-attachment: fixed;
     color: var(--text-primary);
     font-family: 'Rajdhani', sans-serif;
     font-weight: 500;
-    font-size: 1.05rem;
+    font-size: var(--font-md);
+    line-height: 1.5;
 }
 
 /* Hide Streamlit branding */
@@ -61,28 +78,29 @@
     font-family: 'JetBrains Mono', monospace;
     text-align: center;
     color: var(--text-primary);
-    font-size: 1.1rem;
+    font-size: var(--font-md);
     font-weight: 600;
     letter-spacing: 1px;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 20px;
-    margin-bottom: 30px;
+    padding-bottom: var(--space-lg);
+    margin-bottom: var(--space-xl);
+    line-height: 1.5;
 }
 
-/* Metric Cards - Glassmorphism Effect */
+/* Metric Cards - ENHANCED READABILITY */
 [data-testid="metric-container"] {
-    background: rgba(20, 25, 40, 0.9);
+    background: var(--bg-card);
     backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
     border-radius: 16px;
-    padding: 20px;
+    padding: var(--space-lg);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease;
 }
 
 [data-testid="metric-container"]:hover {
-    background: rgba(25, 30, 45, 0.95);
+    background: var(--bg-card-hover);
     transform: translateY(-2px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6),
                 var(--accent-blue-glow);
@@ -90,19 +108,21 @@
 
 [data-testid="metric-container"] label {
     font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    color: var(--text-primary);
+    font-weight: 600;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 1px;
-    font-size: 0.9rem;
+    font-size: var(--font-base);
+    margin-bottom: var(--space-xs);
 }
 
 [data-testid="metric-container"] [data-testid="metric-value"] {
     font-family: 'Orbitron', monospace;
     font-weight: 700;
-    font-size: 2rem;
+    font-size: var(--font-xxl);
     color: var(--accent-blue);
     text-shadow: var(--accent-blue-glow);
+    line-height: 1.2;
 }
 
 [data-testid="metric-container"] [data-testid="metric-delta"] {
@@ -294,16 +314,33 @@
     50% { opacity: 1; }
 }
 
-/* Headers Typography */
-h1, h2, h3 {
+/* Headers Typography - HIGH CONTRAST */
+h1, h2, h3, h4, h5, h6 {
     font-family: 'Orbitron', monospace;
     font-weight: 700;
     letter-spacing: 1px;
+    color: var(--text-primary) !important;
+    margin-top: var(--space-lg);
+    margin-bottom: var(--space-md);
+    line-height: 1.3;
 }
 
-h1 { color: var(--accent-blue); }
-h2 { color: var(--success-green); }
-h3 { color: var(--text-primary); }
+h1 { 
+    font-size: var(--font-xxl);
+    color: var(--accent-blue) !important; 
+}
+h2 { 
+    font-size: var(--font-xl);
+    color: var(--text-primary) !important; 
+}
+h3 { 
+    font-size: var(--font-lg);
+    color: var(--text-primary) !important; 
+}
+h4 { 
+    font-size: var(--font-md);
+    color: var(--text-primary) !important; 
+}
 
 /* Progress Bars */
 .stProgress > div > div {
@@ -507,15 +544,19 @@ h3 { color: var(--text-primary); }
     max-width: 1400px;
 }
 
-/* Make all text more readable */
+/* Make all text more readable - ENHANCED */
 .stMarkdown, .stText {
     color: var(--text-primary) !important;
     font-weight: 500;
+    font-size: var(--font-md) !important;
+    line-height: 1.6 !important;
 }
 
 /* Ensure all paragraph text is readable */
 p {
     color: var(--text-primary) !important;
+    line-height: 1.6 !important;
+    margin-bottom: var(--space-md);
 }
 
 /* Make write output text white */
@@ -523,10 +564,17 @@ p {
     color: var(--text-primary) !important;
 }
 
+[data-testid="stMarkdownContainer"] p {
+    font-size: var(--font-md) !important;
+    line-height: 1.6 !important;
+}
+
 /* Info boxes text */
 .stAlert > div {
     color: var(--text-primary) !important;
     font-weight: 600;
+    font-size: var(--font-md) !important;
+    padding: var(--space-lg) !important;
 }
 
 /* Position Card Enhancements */

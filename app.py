@@ -660,21 +660,21 @@ def display_position_card(position, idx, total_portfolio_value):
         risk_level = "MEDIUM"
         growth_score = 50
     
-    # Trading card container
+    # Trading card container with improved spacing
     st.markdown(f"""
     <div style="
-        background: rgba(20, 25, 40, 0.9);
+        background: rgba(20, 25, 35, 0.9);
         backdrop-filter: blur(15px);
         border-left: 4px solid {border_color};
         border-radius: 16px;
-        padding: 20px;
-        margin: 10px 0;
+        padding: 24px;
+        margin: 16px 0;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
                    {strategy_style['glow']};
         position: relative;
         overflow: hidden;
         transition: all 0.3s ease;
-        height: 320px;
+        min-height: 380px;
     "
     onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 40px rgba(0, 0, 0, 0.6), {strategy_style['glow']}';"
     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 32px rgba(0, 0, 0, 0.4), {strategy_style['glow']}';">
@@ -682,13 +682,13 @@ def display_position_card(position, idx, total_portfolio_value):
         <!-- Strategy Badge -->
         <div style="
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 16px;
+            right: 16px;
             background: {strategy_style['bg']};
-            color: white;
-            padding: 4px 12px;
+            color: #FFFFFF;
+            padding: 6px 16px;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 12px;
             font-weight: 700;
             letter-spacing: 1px;
         ">{strategy}</div>
@@ -696,33 +696,35 @@ def display_position_card(position, idx, total_portfolio_value):
         <!-- Stock Symbol -->
         <h2 style="
             font-family: 'Orbitron', monospace;
-            font-size: 2.2rem;
+            font-size: 28px;
             font-weight: 900;
             color: {border_color};
-            margin: 0 0 10px 0;
+            margin: 0 0 8px 0;
             text-shadow: 0 0 20px {border_color};
+            line-height: 1;
         ">{position['symbol']}</h2>
         
         <!-- Account Type -->
         <p style="
-            color: #B8C5D6;
-            font-size: 0.9rem;
+            color: #E0E6ED;
+            font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin: 0 0 15px 0;
+            margin: 0 0 20px 0;
+            font-weight: 600;
         ">{position['account_type'].upper()} ACCOUNT</p>
         
         <!-- Portfolio Percentage -->
         <div style="
             position: absolute;
-            bottom: 10px;
-            right: 10px;
+            bottom: 16px;
+            right: 16px;
             background: rgba(0, 0, 0, 0.5);
             color: #00D2FF;
-            padding: 4px 8px;
+            padding: 6px 12px;
             border-radius: 12px;
-            font-size: 0.9rem;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: 700;
         ">{portfolio_pct:.1f}% of portfolio</div>
     </div>
     """, unsafe_allow_html=True)
@@ -1232,15 +1234,15 @@ def display_opportunity_card(opp: Dict):
     box_shadow = verdict_glows.get(verdict_emoji, "0 0 20px rgba(0, 210, 255, 0.4)")
     
     with st.container():
-        # Quantum trading card container
+        # Quantum trading card container with better spacing
         st.markdown(f"""
         <div style="
-            background: rgba(30, 42, 58, 0.6);
+            background: rgba(20, 25, 35, 0.9);
             backdrop-filter: blur(10px);
             border: 1px solid {border_color};
             border-radius: 16px;
-            padding: 24px;
-            margin: 16px 0;
+            padding: 32px;
+            margin: 24px 0;
             box-shadow: {box_shadow},
                        0 8px 32px rgba(0, 0, 0, 0.4);
             position: relative;
@@ -1277,39 +1279,82 @@ def display_opportunity_card(opp: Dict):
         with col4:
             st.metric("IV Rank", f"{opp['iv_rank']:.0f}%")
         
-        # Greeks section
+        # Greeks section - Clean Grid Layout
         if opp.get('greeks'):
-            st.markdown("**Greeks Analysis:**")
+            st.markdown("""
+            <div style="
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: 12px;
+                padding: 20px;
+                margin: 16px 0;
+            ">
+                <h4 style="
+                    color: #FFFFFF;
+                    font-size: 18px;
+                    font-weight: 700;
+                    margin-bottom: 16px;
+                    font-family: 'Orbitron', monospace;
+                ">GREEKS ANALYSIS</h4>
+            </div>
+            """, unsafe_allow_html=True)
+            
             gcol1, gcol2, gcol3, gcol4, gcol5 = st.columns(5)
             
             with gcol1:
                 delta_val = abs(opp['greeks']['delta'])
-                delta_color = "🟢" if delta_val < 0.3 else "🟡" if delta_val < 0.5 else "🔴"
-                st.metric("Delta", f"{delta_color} {delta_val:.2f}", 
-                         help="Probability of finishing ITM")
+                delta_color = "#10B981" if delta_val < 0.3 else "#F59E0B" if delta_val < 0.5 else "#EF4444"
+                st.markdown(f"""
+                <div style="text-align: center;">
+                    <p style="color: #E0E6ED; font-size: 14px; margin: 0;">DELTA</p>
+                    <p style="color: {delta_color}; font-size: 20px; font-weight: 700; margin: 8px 0;">{delta_val:.2f}</p>
+                    <p style="color: #9CA3AF; font-size: 12px;">ITM Probability</p>
+                </div>
+                """, unsafe_allow_html=True)
             
             with gcol2:
                 theta_val = abs(opp['greeks']['theta'])
                 theta_daily = theta_val * 100  # Convert to dollars per contract
-                st.metric("Theta", f"${theta_daily:.2f}/day",
-                         help="Daily time decay income")
+                st.markdown(f"""
+                <div style="text-align: center;">
+                    <p style="color: #E0E6ED; font-size: 14px; margin: 0;">THETA</p>
+                    <p style="color: #00D2FF; font-size: 20px; font-weight: 700; margin: 8px 0;">${theta_daily:.2f}</p>
+                    <p style="color: #9CA3AF; font-size: 12px;">Daily Income</p>
+                </div>
+                """, unsafe_allow_html=True)
             
             with gcol3:
                 gamma_val = opp['greeks']['gamma']
                 gamma_risk = "Low" if gamma_val < 0.02 else "Med" if gamma_val < 0.05 else "High"
-                st.metric("Gamma", f"{gamma_val:.3f}",
-                         help=f"Delta change risk: {gamma_risk}")
+                gamma_color = "#10B981" if gamma_risk == "Low" else "#F59E0B" if gamma_risk == "Med" else "#EF4444"
+                st.markdown(f"""
+                <div style="text-align: center;">
+                    <p style="color: #E0E6ED; font-size: 14px; margin: 0;">GAMMA</p>
+                    <p style="color: {gamma_color}; font-size: 20px; font-weight: 700; margin: 8px 0;">{gamma_val:.3f}</p>
+                    <p style="color: #9CA3AF; font-size: 12px;">{gamma_risk} Risk</p>
+                </div>
+                """, unsafe_allow_html=True)
             
             with gcol4:
                 vega_val = abs(opp['greeks']['vega'])
-                st.metric("Vega", f"${vega_val:.2f}",
-                         help="Price change per 1% IV move")
+                st.markdown(f"""
+                <div style="text-align: center;">
+                    <p style="color: #E0E6ED; font-size: 14px; margin: 0;">VEGA</p>
+                    <p style="color: #00D2FF; font-size: 20px; font-weight: 700; margin: 8px 0;">${vega_val:.2f}</p>
+                    <p style="color: #9CA3AF; font-size: 12px;">IV Sensitivity</p>
+                </div>
+                """, unsafe_allow_html=True)
             
             with gcol5:
                 # Calculate Greeks-based score
                 greeks_score = calculate_greeks_score(opp['greeks'])
-                st.metric("Greeks Score", f"{greeks_score}/10",
-                         help="Overall Greeks favorability")
+                score_color = "#10B981" if greeks_score >= 7 else "#F59E0B" if greeks_score >= 5 else "#EF4444"
+                st.markdown(f"""
+                <div style="text-align: center;">
+                    <p style="color: #E0E6ED; font-size: 14px; margin: 0;">SCORE</p>
+                    <p style="color: {score_color}; font-size: 20px; font-weight: 700; margin: 8px 0;">{greeks_score}/10</p>
+                    <p style="color: #9CA3AF; font-size: 12px;">Overall Rating</p>
+                </div>
+                """, unsafe_allow_html=True)
         
         # Recommendation section
         st.markdown("---")
@@ -1411,7 +1456,7 @@ def main():
     
     # Mission Status Bar
     st.markdown("""
-    <p style='text-align: center; color: #FFFFFF; font-family: "JetBrains Mono", monospace; font-weight: 600;'>
+    <p style='text-align: center; color: #E0E6ED; font-family: "JetBrains Mono", monospace; font-weight: 600; font-size: 16px; line-height: 1.5;'>
     MISSION: GENERATE $2-5K MONTHLY INCOME | TARGET: $60K MARGIN DEBT ELIMINATION | STATUS: ACTIVE
     </p>
     """, unsafe_allow_html=True)
