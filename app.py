@@ -187,16 +187,55 @@ def display_monthly_progress():
                 active_trades += 1
     
     win_rate = (win_count / total_trades * 100) if total_trades > 0 else 0
+    income_goal = 3500
+    progress = min(monthly_income / income_goal, 1.0) if income_goal > 0 else 0
+    
+    # Quantum dashboard container
+    st.markdown("""
+    <div style="
+        background: linear-gradient(135deg, rgba(0, 210, 255, 0.05), rgba(57, 255, 20, 0.05));
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(0, 210, 255, 0.2);
+        backdrop-filter: blur(10px);
+    ">
+    """, unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Income Goal", "$3,500", f"${monthly_income:,.0f}")
+        st.metric("💰 INCOME TARGET", f"${income_goal:,}", f"${monthly_income:,.0f}")
+        # Custom progress bar
+        progress_color = "#39FF14" if progress >= 0.8 else "#FF6B35" if progress >= 0.5 else "#00D2FF"
+        st.markdown(f"""
+        <div style="
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            height: 8px;
+            overflow: hidden;
+            margin-top: -10px;
+        ">
+            <div style="
+                background: linear-gradient(90deg, {progress_color}, #00D2FF);
+                height: 100%;
+                width: {progress * 100}%;
+                box-shadow: 0 0 10px {progress_color};
+                transition: width 0.5s ease;
+            "></div>
+        </div>
+        """, unsafe_allow_html=True)
+    
     with col2:
-        st.metric("Win Rate", f"{win_rate:.1f}%")
+        win_color = "#39FF14" if win_rate >= 70 else "#FF6B35" if win_rate >= 50 else "#FF073A"
+        st.metric("🎯 WIN RATE", f"{win_rate:.1f}%")
+        
     with col3:
-        st.metric("Active Trades", active_trades)
+        st.metric("⚡ ACTIVE TRADES", active_trades)
+        
     with col4:
-        st.metric("Margin Debt", "$60,000", "-$2,800")
+        st.metric("🎲 MARGIN DEBT", "$60,000", "-$2,800")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
 
 def add_option_trade():
     """Add active option trade"""
@@ -928,21 +967,49 @@ def scan_covered_call_opportunities():
     return sorted(opportunities, key=lambda x: x['monthly_yield'], reverse=True)
 
 def display_opportunity_card(opp: Dict):
-    """Display enhanced opportunity card with Motley Fool style analysis"""
+    """Display quantum-styled opportunity card with advanced analytics"""
     
-    # Color code based on verdict
-    verdict_color = {
-        "🟢": "green",
-        "🟡": "orange", 
-        "🔴": "red"
+    # Color mapping for recommendations
+    verdict_colors = {
+        "🟢": "#39FF14",
+        "🟡": "#FF6B35", 
+        "🔴": "#FF073A"
     }
     
-    border_color = verdict_color.get(opp['recommendation']['verdict'][:2], "gray")
+    verdict_glows = {
+        "🟢": "0 0 20px rgba(57, 255, 20, 0.4)",
+        "🟡": "0 0 20px rgba(255, 107, 53, 0.4)",
+        "🔴": "0 0 20px rgba(255, 7, 58, 0.4)"
+    }
+    
+    verdict_emoji = opp['recommendation']['verdict'][:2]
+    border_color = verdict_colors.get(verdict_emoji, "#00D2FF")
+    box_shadow = verdict_glows.get(verdict_emoji, "0 0 20px rgba(0, 210, 255, 0.4)")
     
     with st.container():
-        # Create a colored border based on recommendation
+        # Quantum trading card container
         st.markdown(f"""
-        <div style="border: 2px solid {border_color}; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+        <div style="
+            background: rgba(30, 42, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid {border_color};
+            border-radius: 16px;
+            padding: 24px;
+            margin: 16px 0;
+            box-shadow: {box_shadow},
+                       0 8px 32px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        ">
+            <div style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, {border_color}, #00D2FF);
+                animation: shimmer 3s ease-in-out infinite;
+            "></div>
         """, unsafe_allow_html=True)
         
         # Header with verdict
@@ -1061,9 +1128,48 @@ def record_decision(opp: Dict, decision: str, contracts: int, fill_price: float,
     
     save_json_data(DECISIONS_FILE, st.session_state.decisions)
 
+def inject_custom_css():
+    """Inject the quantum trading interface CSS"""
+    with open('styles.css') as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    
+    # Add custom quantum grid background
+    st.markdown("""
+    <style>
+    .quantum-grid {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: 
+            linear-gradient(rgba(0, 210, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 210, 255, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        pointer-events: none;
+        z-index: 0;
+    }
+    </style>
+    <div class="quantum-grid"></div>
+    """, unsafe_allow_html=True)
+
 def main():
-    st.title("📈 COVERED CALL INCOME SYSTEM")
-    st.markdown("**Mission:** Generate $2-5K Monthly Income + Pay Down $60K Margin Debt")
+    # Inject custom CSS
+    inject_custom_css()
+    
+    # Quantum Header
+    st.markdown("""
+    <h1 style='text-align: center; margin-bottom: 0;'>
+    ⚡ QUANTUM INCOME COMMAND CENTER ⚡
+    </h1>
+    """, unsafe_allow_html=True)
+    
+    # Mission Status Bar
+    st.markdown("""
+    <p style='text-align: center; color: #94A3B8; font-family: "JetBrains Mono", monospace;'>
+    MISSION: GENERATE $2-5K MONTHLY INCOME | TARGET: $60K MARGIN DEBT ELIMINATION | STATUS: ACTIVE
+    </p>
+    """, unsafe_allow_html=True)
     
     initialize_session_state()
     
@@ -1798,4 +1904,11 @@ def main():
             st.info("👀 No stocks in watchlist yet. Add some from the Growth Scanner results!")
 
 if __name__ == "__main__":
+    # Set page config before anything else
+    st.set_page_config(
+        page_title="Quantum Income Command Center",
+        page_icon="⚡",
+        layout="wide",
+        initial_sidebar_state="collapsed"
+    )
     main()

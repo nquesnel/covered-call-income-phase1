@@ -1,0 +1,526 @@
+/* Quantum Trading Interface CSS - 22nd Century Design */
+
+/* Import futuristic fonts */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+/* Root variables */
+:root {
+    --bg-primary: #0A0E1A;
+    --bg-secondary: #0F1420;
+    --bg-card: rgba(30, 42, 58, 0.6);
+    --bg-card-hover: rgba(30, 42, 58, 0.8);
+    --accent-blue: #00D2FF;
+    --accent-blue-glow: 0 0 20px rgba(0, 210, 255, 0.6);
+    --success-green: #39FF14;
+    --success-glow: 0 0 15px rgba(57, 255, 20, 0.5);
+    --warning-orange: #FF6B35;
+    --warning-glow: 0 0 15px rgba(255, 107, 53, 0.5);
+    --danger-red: #FF073A;
+    --danger-glow: 0 0 15px rgba(255, 7, 58, 0.5);
+    --text-primary: #E8F0FE;
+    --text-secondary: #94A3B8;
+    --border-color: rgba(0, 210, 255, 0.3);
+}
+
+/* Global styles */
+.stApp {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    font-family: 'Rajdhani', sans-serif;
+}
+
+/* Hide Streamlit branding */
+#MainMenu, footer, header {visibility: hidden;}
+.stDeployButton {display: none;}
+
+/* Quantum Header Styling */
+.stApp > div > div > div > div > div:first-child h1 {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 2.8rem;
+    text-align: center;
+    background: linear-gradient(90deg, var(--accent-blue), var(--success-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: var(--accent-blue-glow);
+    letter-spacing: 3px;
+    margin-bottom: 0;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Mission Status Bar */
+.stApp > div > div > div > div > div:first-child p {
+    font-family: 'JetBrains Mono', monospace;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+/* Metric Cards - Glassmorphism Effect */
+[data-testid="metric-container"] {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+[data-testid="metric-container"]:hover {
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6),
+                var(--accent-blue-glow);
+}
+
+[data-testid="metric-container"] label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+}
+
+[data-testid="metric-container"] [data-testid="metric-value"] {
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 2rem;
+    color: var(--accent-blue);
+    text-shadow: var(--accent-blue-glow);
+}
+
+[data-testid="metric-container"] [data-testid="metric-delta"] {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+}
+
+/* Positive/Negative Deltas */
+[data-testid="metric-container"] [data-testid="metric-delta"] svg {
+    fill: var(--success-green) !important;
+}
+
+[data-testid="metric-container"] [data-testid="metric-delta"][data-delta-type="negative"] svg {
+    fill: var(--danger-red) !important;
+}
+
+/* Tab Navigation */
+.stTabs [data-baseweb="tab-list"] {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    gap: 8px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    border-radius: 8px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+}
+
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, var(--accent-blue), var(--success-green));
+    color: var(--bg-primary);
+    box-shadow: var(--accent-blue-glow);
+}
+
+/* Buttons - Futuristic Style */
+.stButton > button {
+    background: linear-gradient(135deg, rgba(0, 210, 255, 0.1), rgba(0, 210, 255, 0.2));
+    border: 1px solid var(--accent-blue);
+    color: var(--accent-blue);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 12px 24px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stButton > button:hover {
+    background: linear-gradient(135deg, rgba(0, 210, 255, 0.3), rgba(0, 210, 255, 0.4));
+    box-shadow: var(--accent-blue-glow);
+    transform: translateY(-2px);
+}
+
+.stButton > button:active {
+    transform: translateY(0);
+}
+
+/* Primary Buttons */
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, var(--accent-blue), rgba(0, 210, 255, 0.8));
+    color: var(--bg-primary);
+    font-weight: 900;
+}
+
+/* Success Buttons */
+.stButton > button:has-text("✅"), .stButton > button:has-text("TAKE") {
+    background: linear-gradient(135deg, rgba(57, 255, 20, 0.1), rgba(57, 255, 20, 0.2));
+    border-color: var(--success-green);
+    color: var(--success-green);
+}
+
+.stButton > button:has-text("✅"):hover, .stButton > button:has-text("TAKE"):hover {
+    box-shadow: var(--success-glow);
+}
+
+/* Danger Buttons */
+.stButton > button:has-text("❌"), .stButton > button:has-text("PASS"), .stButton > button:has-text("🗑️") {
+    background: linear-gradient(135deg, rgba(255, 7, 58, 0.1), rgba(255, 7, 58, 0.2));
+    border-color: var(--danger-red);
+    color: var(--danger-red);
+}
+
+.stButton > button:has-text("❌"):hover, .stButton > button:has-text("PASS"):hover {
+    box-shadow: var(--danger-glow);
+}
+
+/* Input Fields */
+.stTextInput > div > div > input,
+.stSelectbox > div > div > div,
+.stNumberInput > div > div > input {
+    background: rgba(30, 42, 58, 0.4);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.3s ease;
+}
+
+.stTextInput > div > div > input:focus,
+.stSelectbox > div > div > div:focus,
+.stNumberInput > div > div > input:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.2);
+}
+
+/* Labels */
+.stTextInput label,
+.stSelectbox label,
+.stNumberInput label {
+    color: var(--text-secondary);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+}
+
+/* Expanders */
+.streamlit-expanderHeader {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    color: var(--accent-blue);
+    transition: all 0.3s ease;
+}
+
+.streamlit-expanderHeader:hover {
+    background: var(--bg-card-hover);
+    box-shadow: var(--accent-blue-glow);
+}
+
+/* Data Tables */
+.stDataFrame {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Custom Containers */
+.element-container {
+    transition: all 0.3s ease;
+}
+
+/* Opportunity Cards - Premium Trading Card Style */
+.element-container:has(.stMarkdown h3) {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 16px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.element-container:has(.stMarkdown h3)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent-blue), var(--success-green));
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+/* Headers Typography */
+h1, h2, h3 {
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+h1 { color: var(--accent-blue); }
+h2 { color: var(--success-green); }
+h3 { color: var(--text-primary); }
+
+/* Progress Bars */
+.stProgress > div > div {
+    background: rgba(0, 210, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.stProgress > div > div > div {
+    background: linear-gradient(90deg, var(--accent-blue), var(--success-green));
+    box-shadow: var(--accent-blue-glow);
+}
+
+/* Alerts and Info boxes */
+.stAlert {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid;
+    border-radius: 12px;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+.stAlert[data-baseweb="notification"][kind="info"] {
+    border-color: var(--accent-blue);
+    background: rgba(0, 210, 255, 0.1);
+}
+
+.stAlert[data-baseweb="notification"][kind="success"] {
+    border-color: var(--success-green);
+    background: rgba(57, 255, 20, 0.1);
+}
+
+.stAlert[data-baseweb="notification"][kind="warning"] {
+    border-color: var(--warning-orange);
+    background: rgba(255, 107, 53, 0.1);
+}
+
+.stAlert[data-baseweb="notification"][kind="error"] {
+    border-color: var(--danger-red);
+    background: rgba(255, 7, 58, 0.1);
+}
+
+/* Sidebar */
+.css-1d391kg {
+    background: var(--bg-secondary);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-blue);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--success-green);
+}
+
+/* Loading spinner */
+.stSpinner > div {
+    border-color: var(--accent-blue) transparent transparent transparent;
+}
+
+/* Radio buttons */
+.stRadio > div {
+    display: flex;
+    gap: 16px;
+}
+
+.stRadio > div > label {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stRadio > div > label:hover {
+    border-color: var(--accent-blue);
+    box-shadow: var(--accent-blue-glow);
+}
+
+/* File uploader */
+.stFileUploader {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+/* Code blocks */
+.stCodeBlock {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom animations */
+@keyframes glow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.glow {
+    animation: glow 2s ease-in-out infinite;
+}
+
+/* Enhanced Selectbox Styling */
+.stSelectbox [data-baseweb="select"] {
+    background: rgba(30, 42, 58, 0.6) !important;
+    backdrop-filter: blur(10px);
+    border-color: var(--border-color) !important;
+}
+
+.stSelectbox [data-baseweb="select"]:hover {
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.2);
+}
+
+/* Slider Styling */
+.stSlider > div > div {
+    background: rgba(0, 210, 255, 0.2);
+}
+
+.stSlider > div > div > div {
+    background: var(--accent-blue);
+    box-shadow: var(--accent-blue-glow);
+}
+
+/* Date Input Styling */
+.stDateInput > div > div > input {
+    background: rgba(30, 42, 58, 0.4) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Enhanced Headers */
+.stMarkdown h2 {
+    color: var(--accent-blue);
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-top: 2rem;
+    text-transform: uppercase;
+}
+
+.stMarkdown h3 {
+    color: var(--text-primary);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* Quantum Button Hover Effects */
+.stButton > button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.stButton > button:hover::before {
+    left: 100%;
+}
+
+/* Enhanced Success/Error Messages */
+.stSuccess, .stError, .stWarning, .stInfo {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Greeks Display Styling */
+[data-testid="column"] > div:has(.stMetric) {
+    background: rgba(30, 42, 58, 0.3);
+    border-radius: 8px;
+    padding: 8px;
+    margin: 4px 0;
+}
+
+/* Enhanced Container Styling */
+.block-container {
+    padding-top: 2rem;
+    max-width: 1400px;
+}
+
+/* Quantum particles background effect */
+.stApp::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(0, 210, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(57, 255, 20, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(255, 107, 53, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.stApp > * {
+    position: relative;
+    z-index: 2;
+}
