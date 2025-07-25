@@ -190,52 +190,16 @@ def display_monthly_progress():
     income_goal = 3500
     progress = min(monthly_income / income_goal, 1.0) if income_goal > 0 else 0
     
-    # Quantum dashboard container
-    st.markdown("""
-    <div style="
-        background: linear-gradient(135deg, rgba(0, 210, 255, 0.05), rgba(57, 255, 20, 0.05));
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 30px;
-        border: 1px solid rgba(0, 210, 255, 0.2);
-        backdrop-filter: blur(10px);
-    ">
-    """, unsafe_allow_html=True)
-    
+    # Simple Streamlit metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("💰 INCOME TARGET", f"${income_goal:,}", f"${monthly_income:,.0f}")
-        # Custom progress bar
-        progress_color = "#39FF14" if progress >= 0.8 else "#FF6B35" if progress >= 0.5 else "#00D2FF"
-        st.markdown(f"""
-        <div style="
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            height: 8px;
-            overflow: hidden;
-            margin-top: -10px;
-        ">
-            <div style="
-                background: linear-gradient(90deg, {progress_color}, #00D2FF);
-                height: 100%;
-                width: {progress * 100}%;
-                box-shadow: 0 0 10px {progress_color};
-                transition: width 0.5s ease;
-            "></div>
-        </div>
-        """, unsafe_allow_html=True)
-    
     with col2:
-        win_color = "#39FF14" if win_rate >= 70 else "#FF6B35" if win_rate >= 50 else "#FF073A"
         st.metric("🎯 WIN RATE", f"{win_rate:.1f}%")
-        
     with col3:
         st.metric("⚡ ACTIVE TRADES", active_trades)
-        
     with col4:
         st.metric("🎲 MARGIN DEBT", "$60,000", "-$2,800")
-    
-    st.markdown("</div>", unsafe_allow_html=True)
 
 def add_option_trade():
     """Add active option trade"""
@@ -561,18 +525,7 @@ def display_portfolio_summary():
         except:
             pass
     
-    # Portfolio summary container
-    st.markdown("""
-    <div style="
-        background: linear-gradient(135deg, rgba(0, 210, 255, 0.1), rgba(57, 255, 20, 0.1));
-        border-radius: 20px;
-        padding: 30px;
-        margin-bottom: 30px;
-        border: 1px solid rgba(0, 210, 255, 0.3);
-        backdrop-filter: blur(15px);
-    ">
-    """, unsafe_allow_html=True)
-    
+    # Simple Streamlit metrics
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -580,7 +533,6 @@ def display_portfolio_summary():
         
     with col2:
         pnl_pct = (total_pnl / total_cost * 100) if total_cost > 0 else 0
-        pnl_color = "#39FF14" if pnl_pct >= 0 else "#FF073A"
         st.metric("📈 TOTAL RETURN", f"{pnl_pct:+.2f}%", f"${total_pnl:+,.2f}")
         
     with col3:
@@ -595,8 +547,6 @@ def display_portfolio_summary():
         else:
             st.metric("📉 WORST PERFORMER", "—", "—")
     
-    st.markdown("</div>", unsafe_allow_html=True)
-    
     return {
         'total_value': total_value,
         'total_cost': total_cost,
@@ -606,218 +556,133 @@ def display_portfolio_summary():
     }
 
 def display_position_card(position, idx, total_portfolio_value):
-    """Display a single position as a premium trading card"""
+    """Display a single position as a clean card with all content inside the box and icon actions in the top right."""
+    import yfinance as yf
     try:
-        # Fetch current data
         ticker = yf.Ticker(position['symbol'])
         info = ticker.info
         current_price = info.get('currentPrice', position['cost_basis'])
-        
-        # Calculate metrics
-        position_value = current_price * position['shares']
-        position_cost = position['cost_basis'] * position['shares']
-        position_pnl = position_value - position_cost
-        pnl_pct = (position_pnl / position_cost * 100) if position_cost > 0 else 0
-        
-        # Calculate portfolio percentage
-        portfolio_pct = (position_value / total_portfolio_value * 100) if total_portfolio_value > 0 else 0
-        
-        # Get price history for sparkline
-        hist = ticker.history(period="1mo", interval="1d")
-        
-        # Determine colors based on profit/loss and strategy
-        if pnl_pct >= 0:
-            border_color = "#39FF14"  # Green for profit
-            pnl_emoji = "📈"
-        else:
-            border_color = "#FF073A"  # Red for loss
-            pnl_emoji = "📉"
-            
-        # Strategy colors
-        strategy_colors = {
-            "AGGRESSIVE": {"bg": "#FF073A", "glow": "0 0 20px rgba(255, 7, 58, 0.4)"},
-            "MODERATE": {"bg": "#FF6B35", "glow": "0 0 20px rgba(255, 107, 53, 0.4)"},
-            "CONSERVATIVE": {"bg": "#00D2FF", "glow": "0 0 20px rgba(0, 210, 255, 0.4)"}
-        }
-        
-        strategy = position.get('growth_category', 'MODERATE')
-        strategy_style = strategy_colors.get(strategy, strategy_colors['MODERATE'])
-        
-        # Risk indicator
-        growth_score = position.get('growth_score', 50)
-        risk_level = "HIGH" if growth_score > 70 else "MEDIUM" if growth_score > 40 else "LOW"
-        
-    except Exception as e:
+    except Exception:
         current_price = position['cost_basis']
-        position_value = current_price * position['shares']
-        position_cost = position['cost_basis'] * position['shares']
-        position_pnl = 0
-        pnl_pct = 0
-        border_color = "#00D2FF"
-        pnl_emoji = "—"
-        strategy = "MODERATE"
-        strategy_style = strategy_colors['MODERATE']
-        risk_level = "MEDIUM"
-        growth_score = 50
     
-    # Trading card container with improved spacing
+    position_value = current_price * position['shares']
+    position_cost = position['cost_basis'] * position['shares']
+    position_pnl = position_value - position_cost
+    pnl_pct = (position_pnl / position_cost * 100) if position_cost > 0 else 0
+    portfolio_pct = (position_value / total_portfolio_value * 100) if total_portfolio_value > 0 else 0
+    growth_score = position.get('growth_score', 50)
+    growth_category = position.get('growth_category', 'MODERATE')
+    growth_color = '#00D2FF' if growth_score < 40 else '#FF6B35' if growth_score < 70 else '#FF073A'
+
+    # Card CSS
     st.markdown(f"""
-    <div style="
-        background: rgba(20, 25, 35, 0.9);
-        backdrop-filter: blur(15px);
-        border-left: 4px solid {border_color};
-        border-radius: 16px;
-        padding: 24px;
+    <style>
+    .position-card-{idx} {{
+        background: #1A1A1A;
+        border: 2px solid #444444;
+        border-radius: 12px;
+        padding: 24px 20px 32px 20px;
         margin: 16px 0;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-                   {strategy_style['glow']};
         position: relative;
+        min-height: 270px;
+        box-sizing: border-box;
+        color: #fff;
+    }}
+    .card-actions-{idx} {{
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        display: flex;
+        gap: 2px;
+        z-index: 2;
+    }}
+    .card-btn-{idx} {{
+        background: #000000;
+        border: none;
+        border-radius: 6px;
+        padding: 4px 6px;
+        margin: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        transition: background 0.2s;
+    }}
+    .card-btn-{idx}:hover {{
+        background: #222;
+    }}
+    .growth-meter-{idx} {{
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 10px;
+        background: #222;
+        border-radius: 0 0 10px 10px;
+        border-top: 1px solid #444444;
         overflow: hidden;
-        transition: all 0.3s ease;
-        min-height: 380px;
-    "
-    onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 40px rgba(0, 0, 0, 0.6), {strategy_style['glow']}';"
-    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 32px rgba(0, 0, 0, 0.4), {strategy_style['glow']}';">
-        
-        <!-- Strategy Badge -->
-        <div style="
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: {strategy_style['bg']};
-            color: #FFFFFF;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 1px;
-        ">{strategy}</div>
-        
-        <!-- Stock Symbol -->
-        <h2 style="
-            font-family: 'Orbitron', monospace;
-            font-size: 28px;
-            font-weight: 900;
-            color: {border_color};
-            margin: 0 0 8px 0;
-            text-shadow: 0 0 20px {border_color};
-            line-height: 1;
-        ">{position['symbol']}</h2>
-        
-        <!-- Account Type -->
-        <p style="
-            color: #E0E6ED;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0 0 20px 0;
-            font-weight: 600;
-        ">{position['account_type'].upper()} ACCOUNT</p>
-        
-        <!-- Portfolio Percentage -->
-        <div style="
-            position: absolute;
-            bottom: 16px;
-            right: 16px;
-            background: rgba(0, 0, 0, 0.5);
-            color: #00D2FF;
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 700;
-        ">{portfolio_pct:.1f}% of portfolio</div>
-    </div>
+    }}
+    .growth-bar-{idx} {{
+        height: 100%;
+        background: {growth_color};
+        width: {growth_score}%;
+        transition: width 0.5s;
+    }}
+    </style>
     """, unsafe_allow_html=True)
-    
-    # Price and P&L Section
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Current Price", f"${current_price:.2f}", f"{pnl_emoji} {pnl_pct:+.1f}%")
-    with col2:
-        st.metric("P&L", f"${position_pnl:+,.2f}", f"{position['shares']} shares")
-    
-    # Position Details
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Cost Basis", f"${position['cost_basis']:.2f}")
-    with col2:
-        st.metric("Total Value", f"${position_value:,.2f}")
-    
-    # Risk Meter
-    st.markdown(f"""
-    <div style="margin: 10px 0;">
-        <p style="color: #B8C5D6; font-size: 0.9rem; margin-bottom: 5px;">RISK LEVEL: {risk_level}</p>
-        <div style="
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            height: 10px;
-            overflow: hidden;
-        ">
-            <div style="
-                background: linear-gradient(90deg, #00D2FF, #FF6B35, #FF073A);
-                height: 100%;
-                width: {growth_score}%;
-                transition: width 0.5s ease;
-            "></div>
+
+    # Card content as a single HTML string
+    card_html = f'''
+    <div class="position-card-{idx}">
+        <div style="padding-right: 60px;">
+            <h4 style="margin-bottom:0.5em">{position['symbol']} ({position['account_type'].upper()})</h4>
+            <div><b>Shares:</b> {position['shares']}</div>
+            <div><b>Cost Basis:</b> ${position['cost_basis']:.2f}</div>
+            <div><b>Current Price:</b> ${current_price:.2f}</div>
+            <div><b>Position Value:</b> ${position_value:,.2f}</div>
+            <div><b>P&amp;L:</b> ${position_pnl:+,.2f} ({pnl_pct:+.1f}%)</div>
+            <div><b>Portfolio %:</b> {portfolio_pct:.2f}%</div>
+            <div><b>Growth Category:</b> {growth_category}</div>
+            <div><b>Growth Score:</b> {growth_score}/100</div>
         </div>
+        <div class="growth-meter-{idx}"><div class="growth-bar-{idx}"></div></div>
     </div>
-    """, unsafe_allow_html=True)
-    
-    # Action Buttons
-    col1, col2, col3, col4 = st.columns(4)
+    '''
+    st.markdown(card_html, unsafe_allow_html=True)
+
+    # Action buttons absolutely positioned (Streamlit-native, but visually inside the card)
+    col1, col2, _ = st.columns([0.06, 0.06, 0.88])
     with col1:
-        if st.button("📊", key=f"analyze_{idx}", help="Analyze"):
-            st.session_state[f'analyzing_{idx}'] = True
-    with col2:
-        if st.button("⚡", key=f"trade_{idx}", help="Trade Options"):
-            st.session_state[f'trading_{idx}'] = True
-    with col3:
         if st.button("✏️", key=f"edit_{idx}", help="Edit"):
             st.session_state[f'editing_{idx}'] = True
             st.rerun()
-    with col4:
+    with col2:
         if st.button("🗑️", key=f"del_{idx}", help="Delete"):
             del st.session_state.positions[idx]
             save_json_data(POSITIONS_FILE, st.session_state.positions)
             st.rerun()
-    
+
     # Edit form (if editing)
     if st.session_state.get(f'editing_{idx}', False):
         with st.expander("Edit Position", expanded=True):
-            edit_col1, edit_col2 = st.columns(2)
-            
-            with edit_col1:
-                new_shares = st.number_input("Shares", value=float(position['shares']), key=f"shares_{idx}")
-                new_cost = st.number_input("Cost Basis", value=float(position['cost_basis']), key=f"cost_{idx}")
-                
-            with edit_col2:
-                new_account = st.selectbox("Account", ["taxable", "roth"], 
-                                          index=0 if position['account_type'] == "taxable" else 1,
-                                          key=f"account_{idx}")
-                
-                button_col1, button_col2 = st.columns(2)
-                with button_col1:
-                    if st.button("💾 Save", key=f"save_{idx}", type="primary"):
-                        # Update position
-                        st.session_state.positions[idx]['shares'] = new_shares
-                        st.session_state.positions[idx]['cost_basis'] = new_cost
-                        st.session_state.positions[idx]['account_type'] = new_account
-                        
-                        # Recalculate growth score
-                        score, category, _ = calculate_growth_score(position['symbol'])
-                        st.session_state.positions[idx]['growth_category'] = category
-                        st.session_state.positions[idx]['growth_score'] = score
-                        
-                        # Save and clear edit state
-                        save_json_data(POSITIONS_FILE, st.session_state.positions)
-                        st.session_state[f'editing_{idx}'] = False
-                        st.success("Position updated!")
-                        st.rerun()
-                
-                with button_col2:
-                    if st.button("❌ Cancel", key=f"cancel_{idx}"):
-                        st.session_state[f'editing_{idx}'] = False
-                        st.rerun()
+            new_shares = st.number_input("Shares", value=float(position['shares']), key=f"shares_{idx}")
+            new_cost = st.number_input("Cost Basis", value=float(position['cost_basis']), key=f"cost_{idx}")
+            new_account = st.selectbox("Account", ["taxable", "roth"], index=0 if position['account_type'] == "taxable" else 1, key=f"account_{idx}")
+            if st.button("💾 Save", key=f"save_{idx}"):
+                st.session_state.positions[idx]['shares'] = new_shares
+                st.session_state.positions[idx]['cost_basis'] = new_cost
+                st.session_state.positions[idx]['account_type'] = new_account
+                score, category, _ = calculate_growth_score(position['symbol'])
+                st.session_state.positions[idx]['growth_category'] = category
+                st.session_state.positions[idx]['growth_score'] = score
+                save_json_data(POSITIONS_FILE, st.session_state.positions)
+                st.session_state[f'editing_{idx}'] = False
+                st.success("Position updated!")
+                st.rerun()
+            if st.button("❌ Cancel", key=f"cancel_{idx}"):
+                st.session_state[f'editing_{idx}'] = False
+                st.rerun()
 
 def calculate_iv_rank(symbol: str, current_iv: float) -> float:
     """Calculate IV rank (simplified for Phase 1)"""
@@ -1419,47 +1284,128 @@ def record_decision(opp: Dict, decision: str, contracts: int, fill_price: float,
     save_json_data(DECISIONS_FILE, st.session_state.decisions)
 
 def inject_custom_css():
-    """Inject the quantum trading interface CSS"""
-    with open('styles.css') as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-    
-    # Add custom quantum grid background
+    """Inject simple, clean CSS that we can actually control"""
     st.markdown("""
     <style>
-    .quantum-grid {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: 
-            linear-gradient(rgba(0, 210, 255, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 210, 255, 0.03) 1px, transparent 1px);
-        background-size: 50px 50px;
-        pointer-events: none;
-        z-index: 0;
+    /* SIMPLE, CLEAN CSS - NO COMPLEXITY */
+    
+    /* Force ALL text to be white */
+    * {
+        color: #FFFFFF !important;
+    }
+    
+    /* Background */
+    .stApp {
+        background: #000000;
+    }
+    
+    /* Headers */
+    h1, h2, h3, h4, h5, h6 {
+        color: #FFFFFF !important;
+    }
+    
+    /* All text elements */
+    p, div, span, label {
+        color: #FFFFFF !important;
+    }
+    
+    /* Metric containers - FORCE WHITE TEXT */
+    [data-testid="metric-container"] {
+        background: #1A1A1A !important;
+        border: 2px solid #444444 !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+    }
+    
+    /* Metric values - LARGE WHITE TEXT */
+    [data-testid="metric-container"] > div > div:nth-child(2) {
+        color: #FFFFFF !important;
+        font-size: 32px !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Metric labels */
+    [data-testid="metric-container"] label {
+        color: #FFFFFF !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Buttons */
+    .stButton > button {
+        background: #1A1A1A !important;
+        border: 2px solid #00D2FF !important;
+        color: #FFFFFF !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Tabs */
+    [data-baseweb="tab"] {
+        color: #FFFFFF !important;
+        background: #1A1A1A !important;
+    }
+    
+    [aria-selected="true"] {
+        background: #00D2FF !important;
+        color: #000000 !important;
+    }
+    
+    /* Input fields */
+    input, select, textarea {
+        background: #1A1A1A !important;
+        border: 2px solid #444444 !important;
+        color: #FFFFFF !important;
+    }
+    
+    /* Alerts */
+    .stAlert {
+        background: #1A1A1A !important;
+        border: 2px solid #444444 !important;
+        color: #FFFFFF !important;
+    }
+    
+    /* Hide Streamlit branding */
+    #MainMenu, footer, header {
+        visibility: hidden;
+    }
+    
+    /* Main container */
+    .block-container {
+        background: #000000 !important;
+        padding: 20px !important;
+    }
+    
+    /* Force ALL markdown text white */
+    .stMarkdown, .stMarkdown * {
+        color: #FFFFFF !important;
+    }
+    
+    /* Override any inline styles */
+    [style*="color"] {
+        color: #FFFFFF !important;
+    }
+    
+    /* Force all containers to have white text */
+    .element-container * {
+        color: #FFFFFF !important;
+    }
+    
+    /* Nuclear option - catch everything */
+    *, *::before, *::after {
+        color: #FFFFFF !important;
     }
     </style>
-    <div class="quantum-grid"></div>
     """, unsafe_allow_html=True)
 
 def main():
     # Inject custom CSS
     inject_custom_css()
     
-    # Quantum Header
-    st.markdown("""
-    <h1 style='text-align: center; margin-bottom: 0;'>
-    ⚡ QUANTUM INCOME COMMAND CENTER ⚡
-    </h1>
-    """, unsafe_allow_html=True)
+    # Simple header
+    st.title("⚡ QUANTUM INCOME COMMAND CENTER ⚡")
     
-    # Mission Status Bar
-    st.markdown("""
-    <p style='text-align: center; color: #E0E6ED; font-family: "JetBrains Mono", monospace; font-weight: 600; font-size: 16px; line-height: 1.5;'>
-    MISSION: GENERATE $2-5K MONTHLY INCOME | TARGET: $60K MARGIN DEBT ELIMINATION | STATUS: ACTIVE
-    </p>
-    """, unsafe_allow_html=True)
+    # Mission status
+    st.markdown("**MISSION: GENERATE $2-5K MONTHLY INCOME | TARGET: $60K MARGIN DEBT ELIMINATION | STATUS: ACTIVE**")
     
     initialize_session_state()
     
@@ -2194,11 +2140,4 @@ def main():
             st.info("👀 No stocks in watchlist yet. Add some from the Growth Scanner results!")
 
 if __name__ == "__main__":
-    # Set page config before anything else
-    st.set_page_config(
-        page_title="Quantum Income Command Center",
-        page_icon="⚡",
-        layout="wide",
-        initial_sidebar_state="collapsed"
-    )
     main()
