@@ -22,14 +22,19 @@ WATCHLIST_FILE = os.path.join(DATA_DIR, "watchlist.json")
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
-def load_json_data(filepath: str) -> Dict:
-    """Load data from JSON file, return empty dict if file doesn't exist"""
-    if os.path.exists(filepath):
-        with open(filepath, 'r') as f:
-            return json.load(f)
-    return {}
+def load_json_data(filepath: str, default=None):
+    """Load data from JSON file, return default if file doesn't exist"""
+    try:
+        if os.path.exists(filepath):
+            with open(filepath, 'r') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"Error loading {filepath}: {e}")
+    
+    # Return default value if provided, otherwise empty dict
+    return default if default is not None else {}
 
-def save_json_data(filepath: str, data: Dict) -> None:
+def save_json_data(filepath: str, data) -> None:
     """Save data to JSON file"""
     with open(filepath, 'w') as f:
         json.dump(data, f, indent=2)
@@ -104,7 +109,7 @@ def initialize_session_state():
     if 'growth_screener' not in st.session_state:
         st.session_state.growth_screener = GrowthScreeningSystem()
     if 'active_options' not in st.session_state:
-        st.session_state.active_options = load_json_data("active_options.json", [])
+        st.session_state.active_options = load_json_data(os.path.join(DATA_DIR, "active_options.json"), [])
 
 def check_21_50_7_alerts() -> List[Dict]:
     """Check for 21-50-7 rule violations"""
@@ -232,7 +237,7 @@ def add_option_trade():
                 }
                 
                 st.session_state.active_options.append(option_trade)
-                save_json_data("active_options.json", st.session_state.active_options)
+                save_json_data(os.path.join(DATA_DIR, "active_options.json"), st.session_state.active_options)
                 st.success(f"Added {option_type} for {symbol}")
                 st.rerun()
 
@@ -284,7 +289,7 @@ def display_active_options():
                 if st.button("Close", key=f"close_{option['id']}"):
                     option['status'] = "CLOSED"
                     option['closed_date'] = datetime.now().strftime("%Y-%m-%d")
-                    save_json_data("active_options.json", st.session_state.active_options)
+                    save_json_data(os.path.join(DATA_DIR, "active_options.json"), st.session_state.active_options)
                     st.rerun()
 
 def bulk_import_positions():
