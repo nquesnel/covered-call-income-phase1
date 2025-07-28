@@ -972,7 +972,7 @@ def analyze_covered_call_opportunity(position, call, current_price, iv_rank, gro
     return rec
 
 def scan_covered_call_opportunities():
-    """Scan positions for covered call opportunities with tiered analysis"""
+    """Scan positions for HIGH-QUALITY covered call opportunities only"""
     opportunities = []
     
     for position in st.session_state.positions:
@@ -990,11 +990,11 @@ def scan_covered_call_opportunities():
             if not options_dates:
                 continue
             
-            # Look at multiple expiration dates (21-45 days out)
+            # TIGHTER CRITERIA: Only look at 21-35 days (sweet spot)
             target_dates = [
                 datetime.now() + timedelta(days=21),
-                datetime.now() + timedelta(days=30),
-                datetime.now() + timedelta(days=45)
+                datetime.now() + timedelta(days=28),
+                datetime.now() + timedelta(days=35)
             ]
             
             for target_date in target_dates:
@@ -1004,14 +1004,30 @@ def scan_covered_call_opportunities():
                 opt_chain = ticker.option_chain(best_date)
                 calls = opt_chain.calls
                 
-                # Look at wider range of strikes (3% to 15% OTM)
-                strikes_to_analyze = [
-                    (1.03, "Near the money - High income, higher risk"),
-                    (1.05, "Conservative - Balanced income/upside"),
-                    (1.08, "Growth-friendly - More upside room"),
-                    (1.10, "Aggressive growth - Maximum upside"),
-                    (1.15, "Ultra growth - Emergency income only")
-                ]
+                # TIGHTER STRIKES: Based on growth category
+                growth_category = position.get('growth_category', 'MODERATE')
+                
+                if growth_category in ['Hypergrowth', 'Aggressive']:
+                    # High growth: Only 10-15% OTM
+                    strikes_to_analyze = [
+                        (1.10, "10% OTM - Balanced growth/income"),
+                        (1.12, "12% OTM - Growth-friendly"),
+                        (1.15, "15% OTM - Maximum upside")
+                    ]
+                elif growth_category == 'Moderate':
+                    # Moderate growth: 5-10% OTM
+                    strikes_to_analyze = [
+                        (1.05, "5% OTM - Income focused"),
+                        (1.08, "8% OTM - Balanced approach"),
+                        (1.10, "10% OTM - Growth tilt")
+                    ]
+                else:  # Conservative
+                    # Value stocks: 3-7% OTM
+                    strikes_to_analyze = [
+                        (1.03, "3% OTM - High income"),
+                        (1.05, "5% OTM - Standard play"),
+                        (1.07, "7% OTM - Conservative growth")
+                    ]
                 
                 for strike_multiplier, strike_desc in strikes_to_analyze:
                     target_strike = current_price * strike_multiplier
@@ -1031,8 +1047,35 @@ def scan_covered_call_opportunities():
                             )
                             
                             premium = (call['bid'] + call['ask']) / 2
-                            monthly_yield = (premium / current_price) * 100 * (30 / (datetime.strptime(best_date, '%Y-%m-%d') - datetime.now()).days)
+                            days_to_exp = (datetime.strptime(best_date, '%Y-%m-%d') - datetime.now()).days
+                            monthly_yield = (premium / current_price) * 100 * (30 / days_to_exp)
                             annual_yield = monthly_yield * 12
+                            
+                            # QUALITY FILTERS - Only show high-probability plays
+                            # 1. Minimum premium requirements
+                            min_premium = current_price * 0.005  # 0.5% minimum
+                            if premium < min_premium:
+                                continue
+                                
+                            # 2. Minimum monthly yield based on category
+                            if growth_category in ['Hypergrowth', 'Aggressive']:
+                                min_yield = 1.0  # 1% monthly minimum for growth
+                            elif growth_category == 'Moderate':
+                                min_yield = 1.5  # 1.5% monthly for moderate
+                            else:
+                                min_yield = 2.0  # 2% monthly for conservative
+                                
+                            if monthly_yield < min_yield:
+                                continue
+                                
+                            # 3. IV Rank filter - only show when IV is elevated
+                            if iv_rank < 30:  # Skip low volatility
+                                continue
+                                
+                            # 4. Bid-Ask spread filter
+                            spread = (call['ask'] - call['bid']) / call['bid'] if call['bid'] > 0 else 1
+                            if spread > 0.5:  # Skip if spread > 50%
+                                continue
                             
                             # Check for upcoming earnings
                             earnings_date = None
@@ -1060,14 +1103,17 @@ def scan_covered_call_opportunities():
                             
                             # Adjust recommendation based on earnings proximity
                             if days_to_earnings and days_to_earnings <= 14:
-                                recommendation['verdict'] = "🔴 NO - Too close to earnings"
-                                recommendation['reasoning'] = f"Earnings on {earnings_date} ({days_to_earnings} days) - IV crush risk too high"
-                                recommendation['action'] = "Wait until after earnings"
+                                # Skip opportunities too close to earnings
+                                continue
                             elif days_to_earnings and days_to_earnings <= 30:
                                 # Add earnings warning to existing recommendation
                                 if "YES" in recommendation['verdict']:
                                     recommendation['verdict'] = recommendation['verdict'].replace("YES", "MAYBE")
                                 recommendation['reasoning'] += f" | ⚠️ Earnings {earnings_date} ({days_to_earnings} days)"
+                            
+                            # FINAL FILTER: Only show YES recommendations
+                            if "NO" in recommendation['verdict'] or "WAIT" in recommendation['verdict']:
+                                continue
                             
                             # Extract Greeks
                             delta = call.get('delta', 0)
@@ -1181,26 +1227,27 @@ def display_opportunities_section():
     if hasattr(st.session_state, 'opportunities'):
         if st.session_state.opportunities:
             # Show summary
-            st.markdown("### 📊 Opportunity Summary")
+            st.markdown("### 🎯 HIGH-QUALITY OPPORTUNITIES ONLY")
+            st.markdown("*Filtered for: Min yield requirements, IV > 30%, tight spreads, optimal timing*")
             
             # Count recommendations by type
             strong_yes = len([o for o in st.session_state.opportunities if "STRONG YES" in o['recommendation']['verdict']])
             yes = len([o for o in st.session_state.opportunities if "YES" in o['recommendation']['verdict'] and "STRONG" not in o['recommendation']['verdict']])
-            maybe = len([o for o in st.session_state.opportunities if "MAYBE" in o['recommendation']['verdict'] or "WAIT" in o['recommendation']['verdict']])
-            no = len([o for o in st.session_state.opportunities if "NO" in o['recommendation']['verdict']])
+            maybe = len([o for o in st.session_state.opportunities if "MAYBE" in o['recommendation']['verdict']])
             
-            col1, col2, col3, col4, col5 = st.columns(5)
+            col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Total Opportunities", len(st.session_state.opportunities))
+                st.metric("🎯 Total Quality Plays", len(st.session_state.opportunities))
             with col2:
                 st.metric("🟢 Strong Yes", strong_yes)
             with col3:
                 st.metric("🟡 Yes/Maybe", yes + maybe)
             with col4:
-                st.metric("🔴 No", no)
-            with col5:
-                avg_yield = sum(o['monthly_yield'] for o in st.session_state.opportunities) / len(st.session_state.opportunities)
-                st.metric("Avg Monthly Yield", f"{avg_yield:.1f}%")
+                if st.session_state.opportunities:
+                    avg_yield = sum(o['monthly_yield'] for o in st.session_state.opportunities) / len(st.session_state.opportunities)
+                    st.metric("Avg Monthly Yield", f"{avg_yield:.1f}%")
+                else:
+                    st.metric("Avg Monthly Yield", "0%")
             
             st.markdown("---")
             
@@ -1261,13 +1308,23 @@ def display_opportunities_section():
                 if i + opportunities_per_row < len(filtered_opps):
                     st.markdown("---")
         else:
-            st.info("No opportunities found. This could mean:")
+            st.warning("🎯 No HIGH-QUALITY opportunities found!")
             st.markdown("""
-            - Your positions don't have liquid options chains
-            - Premiums are too low across the board
-            - Try adjusting your position sizes to have at least 100 shares
+            **Our strict filters require:**
+            - ✅ Minimum monthly yield: 1% (growth), 1.5% (moderate), 2% (conservative)
+            - ✅ IV Rank > 30% (elevated volatility)
+            - ✅ Tight bid-ask spreads (<50%)
+            - ✅ Meaningful premium (>0.5% of stock price)
+            - ✅ 21-35 days to expiration
+            - ✅ No earnings within 14 days
+            - ✅ Positive recommendation only
             
-            💡 **Tip:** Focus on adding positions in high-volatility growth stocks with active options markets
+            **What this means:**
+            - Market conditions may be too calm (low volatility)
+            - Your stocks might not have active options
+            - Wait for volatility spikes or earnings season
+            
+            💡 **Try again when:** VIX > 20, after market selloffs, or pre-earnings
             """)
     else:
         st.info("Click 'Scan for Opportunities' to find covered call trades")
