@@ -43,42 +43,43 @@ def load_demo_portfolio():
     """Load Neal's complete portfolio"""
     positions = [
         # Traditional IRA
-        {"symbol": "AMZN", "shares": 60, "cost_basis": 37.83, "account_type": "roth"},
-        {"symbol": "BRK.B", "shares": 20, "cost_basis": 124.44, "account_type": "roth"},
-        {"symbol": "COIN", "shares": 20, "cost_basis": 228.75, "account_type": "roth"},
-        {"symbol": "CRWD", "shares": 10, "cost_basis": 206.91, "account_type": "roth"},
-        {"symbol": "HIMS", "shares": 100, "cost_basis": 28.06, "account_type": "roth"},
-        {"symbol": "MA", "shares": 52.069, "cost_basis": 86.67, "account_type": "roth"},
-        {"symbol": "RKLB", "shares": 75, "cost_basis": 28.24, "account_type": "roth"},
-        {"symbol": "TDOC", "shares": 75, "cost_basis": 105.47, "account_type": "roth"},
-        {"symbol": "TSLA", "shares": 5, "cost_basis": 271.94, "account_type": "roth"},
-        {"symbol": "TWLO", "shares": 50, "cost_basis": 29.79, "account_type": "roth"},
+        {"symbol": "AMZN", "shares": 60, "cost_basis": 37.83, "account_type": "roth", "growth_category": "Hypergrowth", "growth_score": 85},
+        {"symbol": "BRK.B", "shares": 20, "cost_basis": 124.44, "account_type": "roth", "growth_category": "Conservative", "growth_score": 25},
+        {"symbol": "COIN", "shares": 20, "cost_basis": 228.75, "account_type": "roth", "growth_category": "Aggressive", "growth_score": 72},
+        {"symbol": "CRWD", "shares": 10, "cost_basis": 206.91, "account_type": "roth", "growth_category": "Hypergrowth", "growth_score": 88},
+        {"symbol": "HIMS", "shares": 100, "cost_basis": 28.06, "account_type": "roth", "growth_category": "Hypergrowth", "growth_score": 82},
+        {"symbol": "MA", "shares": 52.069, "cost_basis": 86.67, "account_type": "roth", "growth_category": "Moderate", "growth_score": 48},
+        {"symbol": "RKLB", "shares": 75, "cost_basis": 28.24, "account_type": "roth", "growth_category": "Hypergrowth", "growth_score": 90},
+        {"symbol": "TDOC", "shares": 75, "cost_basis": 105.47, "account_type": "roth", "growth_category": "Conservative", "growth_score": 20},
+        {"symbol": "TSLA", "shares": 5, "cost_basis": 271.94, "account_type": "roth", "growth_category": "Aggressive", "growth_score": 75},
+        {"symbol": "TWLO", "shares": 50, "cost_basis": 29.79, "account_type": "roth", "growth_category": "Conservative", "growth_score": 30},
         # Taxable Account 1
-        {"symbol": "AAPL", "shares": 244.9777, "cost_basis": 43.99, "account_type": "taxable"},
-        {"symbol": "ADBE", "shares": 10, "cost_basis": 29.45, "account_type": "taxable"},
-        {"symbol": "COST", "shares": 25.079, "cost_basis": 78.46, "account_type": "taxable"},
-        {"symbol": "EXEL", "shares": 200, "cost_basis": 4.97, "account_type": "taxable"},
-        {"symbol": "GOOGL", "shares": 60.351, "cost_basis": 12.95, "account_type": "taxable"},
-        {"symbol": "BAC", "shares": 200, "cost_basis": 5.49, "account_type": "taxable"},
-        {"symbol": "COIN", "shares": 15, "cost_basis": 193.75, "account_type": "taxable"},
-        # Skip existing TSLA taxable since it's already there
+        {"symbol": "AAPL", "shares": 244.9777, "cost_basis": 43.99, "account_type": "taxable", "growth_category": "Moderate", "growth_score": 48},
+        {"symbol": "ADBE", "shares": 10, "cost_basis": 29.45, "account_type": "taxable", "growth_category": "Moderate", "growth_score": 55},
+        {"symbol": "COST", "shares": 25.079, "cost_basis": 78.46, "account_type": "taxable", "growth_category": "Moderate", "growth_score": 38},
+        {"symbol": "EXEL", "shares": 200, "cost_basis": 4.97, "account_type": "taxable", "growth_category": "Conservative", "growth_score": 20},
+        {"symbol": "GOOGL", "shares": 60.351, "cost_basis": 12.95, "account_type": "taxable", "growth_category": "Moderate", "growth_score": 58},
+        {"symbol": "BAC", "shares": 200, "cost_basis": 5.49, "account_type": "taxable", "growth_category": "Conservative", "growth_score": 18},
+        {"symbol": "COIN", "shares": 15, "cost_basis": 193.75, "account_type": "taxable", "growth_category": "Aggressive", "growth_score": 72},
+        # TSLA taxable
+        {"symbol": "TSLA", "shares": 15, "cost_basis": 251.40, "account_type": "taxable", "growth_category": "Aggressive", "growth_score": 75},
         # Roth IRA
-        {"symbol": "BB", "shares": 500, "cost_basis": 4.28, "account_type": "roth"},
-        {"symbol": "CRWD", "shares": 7, "cost_basis": 319.50, "account_type": "roth"},
-        {"symbol": "GENI", "shares": 300, "cost_basis": 4.33, "account_type": "roth"},
-        {"symbol": "GXO", "shares": 100, "cost_basis": 0.00, "account_type": "roth"},
-        {"symbol": "HIMS", "shares": 30, "cost_basis": 41.67, "account_type": "roth"},
-        {"symbol": "HUBS", "shares": 20, "cost_basis": 115.38, "account_type": "roth"},
-        {"symbol": "HWM", "shares": 10, "cost_basis": 153.57, "account_type": "roth"},
-        {"symbol": "MDB", "shares": 100, "cost_basis": 56.60, "account_type": "roth"},
-        {"symbol": "MGNI", "shares": 500, "cost_basis": 6.22, "account_type": "roth"},
-        {"symbol": "OKTA", "shares": 100, "cost_basis": 29.82, "account_type": "roth"},
-        {"symbol": "OSCR", "shares": 150, "cost_basis": 14.27, "account_type": "roth"},
-        {"symbol": "PLTR", "shares": 100, "cost_basis": 40.35, "account_type": "roth"},
-        {"symbol": "RXO", "shares": 100, "cost_basis": 0.00, "account_type": "roth"},
-        {"symbol": "TSLA", "shares": 15, "cost_basis": 296.10, "account_type": "roth"},
-        {"symbol": "TWLO", "shares": 35, "cost_basis": 106.19, "account_type": "roth"},
-        {"symbol": "XPO", "shares": 100, "cost_basis": 27.97, "account_type": "roth"}
+        {"symbol": "BB", "shares": 500, "cost_basis": 4.28, "account_type": "roth", "growth_category": "Conservative", "growth_score": 15},
+        {"symbol": "CRWD", "shares": 7, "cost_basis": 319.50, "account_type": "roth", "growth_category": "Hypergrowth", "growth_score": 88},
+        {"symbol": "GENI", "shares": 300, "cost_basis": 4.33, "account_type": "roth", "growth_category": "Aggressive", "growth_score": 65},
+        {"symbol": "GXO", "shares": 100, "cost_basis": 0.00, "account_type": "roth", "growth_category": "Moderate", "growth_score": 40},
+        {"symbol": "HIMS", "shares": 30, "cost_basis": 41.67, "account_type": "roth", "growth_category": "Hypergrowth", "growth_score": 82},
+        {"symbol": "HUBS", "shares": 20, "cost_basis": 115.38, "account_type": "roth", "growth_category": "Moderate", "growth_score": 55},
+        {"symbol": "HWM", "shares": 10, "cost_basis": 153.57, "account_type": "roth", "growth_category": "Moderate", "growth_score": 45},
+        {"symbol": "MDB", "shares": 100, "cost_basis": 56.60, "account_type": "roth", "growth_category": "Hypergrowth", "growth_score": 82},
+        {"symbol": "MGNI", "shares": 500, "cost_basis": 6.22, "account_type": "roth", "growth_category": "Aggressive", "growth_score": 68},
+        {"symbol": "OKTA", "shares": 100, "cost_basis": 29.82, "account_type": "roth", "growth_category": "Moderate", "growth_score": 52},
+        {"symbol": "OSCR", "shares": 150, "cost_basis": 14.27, "account_type": "roth", "growth_category": "Hypergrowth", "growth_score": 85},
+        {"symbol": "PLTR", "shares": 100, "cost_basis": 40.35, "account_type": "roth", "growth_category": "Aggressive", "growth_score": 78},
+        {"symbol": "RXO", "shares": 100, "cost_basis": 0.00, "account_type": "roth", "growth_category": "Moderate", "growth_score": 40},
+        {"symbol": "TSLA", "shares": 15, "cost_basis": 296.10, "account_type": "roth", "growth_category": "Aggressive", "growth_score": 75},
+        {"symbol": "TWLO", "shares": 35, "cost_basis": 106.19, "account_type": "roth", "growth_category": "Conservative", "growth_score": 30},
+        {"symbol": "XPO", "shares": 100, "cost_basis": 27.97, "account_type": "roth", "growth_category": "Moderate", "growth_score": 42}
     ]
     
     # Add each position with growth scoring
@@ -86,9 +87,11 @@ def load_demo_portfolio():
         # Skip if position already exists
         existing = [p for p in st.session_state.positions if isinstance(p, dict) and p.get('symbol') == pos['symbol'] and p.get('account_type') == pos['account_type']]
         if not existing:
-            score, category, _ = calculate_growth_score(pos['symbol'])
-            pos['growth_category'] = category
-            pos['growth_score'] = score
+            # Use pre-calculated scores if available, otherwise calculate
+            if 'growth_score' not in pos or 'growth_category' not in pos:
+                score, category, _ = calculate_growth_score(pos['symbol'])
+                pos['growth_category'] = category
+                pos['growth_score'] = score
             pos['added_date'] = datetime.now().isoformat()
             st.session_state.positions.append(pos)
     
@@ -1031,11 +1034,40 @@ def scan_covered_call_opportunities():
                             monthly_yield = (premium / current_price) * 100 * (30 / (datetime.strptime(best_date, '%Y-%m-%d') - datetime.now()).days)
                             annual_yield = monthly_yield * 12
                             
+                            # Check for upcoming earnings
+                            earnings_date = None
+                            try:
+                                calendar = ticker.calendar
+                                if calendar is not None and not calendar.empty:
+                                    next_earnings = calendar.iloc[0]
+                                    earnings_date = next_earnings.get('Earnings Date')
+                                    if earnings_date:
+                                        earnings_date = pd.to_datetime(earnings_date).strftime('%Y-%m-%d')
+                            except:
+                                pass
+                            
+                            # Calculate days to earnings if available
+                            days_to_earnings = None
+                            if earnings_date:
+                                earnings_dt = datetime.strptime(earnings_date, '%Y-%m-%d')
+                                days_to_earnings = (earnings_dt - datetime.now()).days
+                            
                             # Calculate recommendation based on multiple factors
                             recommendation = analyze_covered_call_opportunity(
                                 position, call, current_price, iv_rank, growth_score, 
                                 strike_multiplier, monthly_yield
                             )
+                            
+                            # Adjust recommendation based on earnings proximity
+                            if days_to_earnings and days_to_earnings <= 14:
+                                recommendation['verdict'] = "🔴 NO - Too close to earnings"
+                                recommendation['reasoning'] = f"Earnings on {earnings_date} ({days_to_earnings} days) - IV crush risk too high"
+                                recommendation['action'] = "Wait until after earnings"
+                            elif days_to_earnings and days_to_earnings <= 30:
+                                # Add earnings warning to existing recommendation
+                                if "YES" in recommendation['verdict']:
+                                    recommendation['verdict'] = recommendation['verdict'].replace("YES", "MAYBE")
+                                recommendation['reasoning'] += f" | ⚠️ Earnings {earnings_date} ({days_to_earnings} days)"
                             
                             # Extract Greeks
                             delta = call.get('delta', 0)
@@ -1064,6 +1096,8 @@ def scan_covered_call_opportunities():
                                 'growth_category': position['growth_category'],
                                 'recommendation': recommendation,
                                 'days_to_expiry': (datetime.strptime(best_date, '%Y-%m-%d') - datetime.now()).days,
+                                'earnings_date': earnings_date,
+                                'days_to_earnings': days_to_earnings,
                                 'greeks': {
                                     'delta': delta,
                                     'theta': theta,
@@ -1079,184 +1113,164 @@ def scan_covered_call_opportunities():
     return sorted(opportunities, key=lambda x: x['monthly_yield'], reverse=True)
 
 def display_opportunity_card(opp: Dict):
-    """Display quantum-styled opportunity card with advanced analytics"""
+    """Display opportunity card using pure Streamlit components with simple background styling."""
+    # Format expiration date
+    exp_date = datetime.strptime(opp['expiration'], '%Y-%m-%d')
+    exp_month = exp_date.strftime('%b').upper()
+    exp_day = exp_date.strftime('%d')
     
-    # Color mapping for recommendations
-    verdict_colors = {
-        "🟢": "#39FF14",
-        "🟡": "#FF6B35", 
-        "🔴": "#FF073A"
-    }
-    
-    verdict_glows = {
-        "🟢": "0 0 20px rgba(57, 255, 20, 0.4)",
-        "🟡": "0 0 20px rgba(255, 107, 53, 0.4)",
-        "🔴": "0 0 20px rgba(255, 7, 58, 0.4)"
-    }
-    
-    verdict_emoji = opp['recommendation']['verdict'][:2]
-    border_color = verdict_colors.get(verdict_emoji, "#00D2FF")
-    box_shadow = verdict_glows.get(verdict_emoji, "0 0 20px rgba(0, 210, 255, 0.4)")
-    
+    # Greeks
+    greeks = opp.get('greeks', {})
+    delta = abs(greeks.get('delta', 0))
+    theta = abs(greeks.get('theta', 0))
+    gamma = greeks.get('gamma', 0)
+    score = calculate_greeks_score(greeks)
+
+    # Simple container with background
     with st.container():
-        # Quantum trading card container with better spacing
-        st.markdown(f"""
-        <div style="
-            background: rgba(20, 25, 35, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid {border_color};
-            border-radius: 16px;
-            padding: 32px;
-            margin: 24px 0;
-            box-shadow: {box_shadow},
-                       0 8px 32px rgba(0, 0, 0, 0.4);
-            position: relative;
-            overflow: hidden;
-        ">
-            <div style="
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 4px;
-                background: linear-gradient(90deg, {border_color}, #00D2FF);
-                animation: shimmer 3s ease-in-out infinite;
-            "></div>
-        """, unsafe_allow_html=True)
+        # Card header
+        st.markdown(f"### {opp['symbol']} - ${opp['strike']:.2f}")
         
-        # Header with verdict
-        col1, col2 = st.columns([3, 1])
+        # Expiration and earnings info
+        col1, col2 = st.columns([1, 2])
         with col1:
-            st.markdown(f"### {opp['symbol']} - ${opp['strike']:.2f} Strike")
-            st.markdown(f"**{opp['strike_desc']}**")
+            st.markdown(f"**{exp_month} {exp_day}**")
         with col2:
-            st.metric("Monthly Yield", f"{opp['monthly_yield']:.1f}%", 
-                     f"Annual: {opp['annual_yield']:.0f}%")
+            if opp.get('earnings_date') and opp.get('days_to_earnings', 999) <= 30:
+                st.markdown(f"⚠️ **Earnings {opp['earnings_date']} ({opp['days_to_earnings']}d)**")
         
-        # Key metrics
-        col1, col2, col3, col4 = st.columns(4)
+        # Strike description
+        st.markdown(f"*{opp['strike_desc']}*")
+        
+        # Key metrics in 2x3 grid
+        col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Current Price", f"${opp['current_price']:.2f}")
-        with col2:
+            st.metric("Current", f"${opp['current_price']:.2f}")
             st.metric("Premium", f"${opp['premium']:.2f}")
-        with col3:
-            st.metric("Days to Exp", opp['days_to_expiry'])
-        with col4:
-            st.metric("IV Rank", f"{opp['iv_rank']:.0f}%")
-        
-        # Greeks section - Clean Grid Layout
-        if opp.get('greeks'):
-            st.markdown("""
-            <div style="
-                background: rgba(0, 0, 0, 0.3);
-                border-radius: 12px;
-                padding: 20px;
-                margin: 16px 0;
-            ">
-                <h4 style="
-                    color: #FFFFFF;
-                    font-size: 18px;
-                    font-weight: 700;
-                    margin-bottom: 16px;
-                    font-family: 'Orbitron', monospace;
-                ">GREEKS ANALYSIS</h4>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            gcol1, gcol2, gcol3, gcol4, gcol5 = st.columns(5)
-            
-            with gcol1:
-                delta_val = abs(opp['greeks']['delta'])
-                delta_color = "#10B981" if delta_val < 0.3 else "#F59E0B" if delta_val < 0.5 else "#EF4444"
-                st.markdown(f"""
-                <div style="text-align: center;">
-                    <p style="color: #E0E6ED; font-size: 14px; margin: 0;">DELTA</p>
-                    <p style="color: {delta_color}; font-size: 20px; font-weight: 700; margin: 8px 0;">{delta_val:.2f}</p>
-                    <p style="color: #9CA3AF; font-size: 12px;">ITM Probability</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with gcol2:
-                theta_val = abs(opp['greeks']['theta'])
-                theta_daily = theta_val * 100  # Convert to dollars per contract
-                st.markdown(f"""
-                <div style="text-align: center;">
-                    <p style="color: #E0E6ED; font-size: 14px; margin: 0;">THETA</p>
-                    <p style="color: #00D2FF; font-size: 20px; font-weight: 700; margin: 8px 0;">${theta_daily:.2f}</p>
-                    <p style="color: #9CA3AF; font-size: 12px;">Daily Income</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with gcol3:
-                gamma_val = opp['greeks']['gamma']
-                gamma_risk = "Low" if gamma_val < 0.02 else "Med" if gamma_val < 0.05 else "High"
-                gamma_color = "#10B981" if gamma_risk == "Low" else "#F59E0B" if gamma_risk == "Med" else "#EF4444"
-                st.markdown(f"""
-                <div style="text-align: center;">
-                    <p style="color: #E0E6ED; font-size: 14px; margin: 0;">GAMMA</p>
-                    <p style="color: {gamma_color}; font-size: 20px; font-weight: 700; margin: 8px 0;">{gamma_val:.3f}</p>
-                    <p style="color: #9CA3AF; font-size: 12px;">{gamma_risk} Risk</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with gcol4:
-                vega_val = abs(opp['greeks']['vega'])
-                st.markdown(f"""
-                <div style="text-align: center;">
-                    <p style="color: #E0E6ED; font-size: 14px; margin: 0;">VEGA</p>
-                    <p style="color: #00D2FF; font-size: 20px; font-weight: 700; margin: 8px 0;">${vega_val:.2f}</p>
-                    <p style="color: #9CA3AF; font-size: 12px;">IV Sensitivity</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with gcol5:
-                # Calculate Greeks-based score
-                greeks_score = calculate_greeks_score(opp['greeks'])
-                score_color = "#10B981" if greeks_score >= 7 else "#F59E0B" if greeks_score >= 5 else "#EF4444"
-                st.markdown(f"""
-                <div style="text-align: center;">
-                    <p style="color: #E0E6ED; font-size: 14px; margin: 0;">SCORE</p>
-                    <p style="color: {score_color}; font-size: 20px; font-weight: 700; margin: 8px 0;">{greeks_score}/10</p>
-                    <p style="color: #9CA3AF; font-size: 12px;">Overall Rating</p>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        # Recommendation section
-        st.markdown("---")
-        st.markdown(f"### {opp['recommendation']['verdict']}")
-        st.markdown(f"**Analysis:** {opp['recommendation']['reasoning']}")
-        
-        if opp['recommendation']['action']:
-            st.info(f"**Suggested Action:** {opp['recommendation']['action']}")
-        
-        if opp['recommendation']['conditional']:
-            st.warning(f"**Alternative:** {opp['recommendation']['conditional']}")
-        
-        # Action buttons
-        st.markdown("---")
-        col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
-        
-        with col1:
-            # Use more unique key including expiration date and index
-            unique_key = f"{opp['position_key']}_{opp['strike']}_{opp['expiration']}_{opp.get('_index', 0)}"
-            if st.button("✅ TAKE", key=f"take_{unique_key}"):
-                st.session_state.show_take_dialog = opp
-                
         with col2:
-            if st.button("❌ PASS", key=f"pass_{unique_key}"):
-                record_decision(opp, "PASS", 0, opp['premium'], opp['recommendation']['reasoning'])
-                st.success("Decision recorded!")
-                st.rerun()
-                
+            st.metric("Days", opp['days_to_expiry'])
+            st.metric("Monthly", f"{opp['monthly_yield']:.1f}%")
         with col3:
-            if st.button("📌 WATCH", key=f"watch_{unique_key}"):
-                # Add to a covered call watchlist
-                if 'cc_watchlist' not in st.session_state:
-                    st.session_state.cc_watchlist = []
-                st.session_state.cc_watchlist.append(opp)
-                st.success("Added to covered call watchlist!")
+            st.metric("IV Rank", f"{opp['iv_rank']:.0f}%")
+            st.metric("Score", f"{score}/10")
         
-        st.markdown("</div>", unsafe_allow_html=True)
+        # Greeks in 3 columns
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown(f"**Δ {delta:.2f}**")
+            st.markdown("*ITM*")
+        with col2:
+            st.markdown(f"**Θ ${theta*100:.1f}**")
+            st.markdown("*Daily*")
+        with col3:
+            st.markdown(f"**Γ {gamma:.3f}**")
+            st.markdown("*Risk*")
+        
+        # Recommendation
+        st.markdown("---")
+        st.markdown(f"**{opp['recommendation']['verdict']}**")
+        st.markdown(f"*{opp['recommendation']['reasoning'][:100]}{'...' if len(opp['recommendation']['reasoning']) > 100 else ''}*")
+        
+        # Add spacing between cards
+        st.markdown("")
+        st.markdown("---")
+        st.markdown("")
+
+def display_opportunities_section():
+    """Display opportunities in a condensed 2-3 column layout using native Streamlit"""
+    if hasattr(st.session_state, 'opportunities'):
+        if st.session_state.opportunities:
+            # Show summary
+            st.markdown("### 📊 Opportunity Summary")
+            
+            # Count recommendations by type
+            strong_yes = len([o for o in st.session_state.opportunities if "STRONG YES" in o['recommendation']['verdict']])
+            yes = len([o for o in st.session_state.opportunities if "YES" in o['recommendation']['verdict'] and "STRONG" not in o['recommendation']['verdict']])
+            maybe = len([o for o in st.session_state.opportunities if "MAYBE" in o['recommendation']['verdict'] or "WAIT" in o['recommendation']['verdict']])
+            no = len([o for o in st.session_state.opportunities if "NO" in o['recommendation']['verdict']])
+            
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric("Total Opportunities", len(st.session_state.opportunities))
+            with col2:
+                st.metric("🟢 Strong Yes", strong_yes)
+            with col3:
+                st.metric("🟡 Yes/Maybe", yes + maybe)
+            with col4:
+                st.metric("🔴 No", no)
+            with col5:
+                avg_yield = sum(o['monthly_yield'] for o in st.session_state.opportunities) / len(st.session_state.opportunities)
+                st.metric("Avg Monthly Yield", f"{avg_yield:.1f}%")
+            
+            st.markdown("---")
+            
+            # Filter options
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                filter_verdict = st.selectbox("Filter by Verdict", 
+                    ["All", "🟢 Strong Yes Only", "🟢🟡 Yes/Maybe", "🔴 No/Wait"])
+            with col2:
+                sort_by = st.selectbox("Sort by", 
+                    ["Monthly Yield", "IV Rank", "Days to Expiry", "Strike Distance"])
+            with col3:
+                min_yield = st.slider("Min Monthly Yield %", 0.0, 5.0, 0.0, 0.1)
+            
+            # Filter and sort opportunities
+            filtered_opps = st.session_state.opportunities
+            
+            if filter_verdict != "All":
+                if filter_verdict == "🟢 Strong Yes Only":
+                    filtered_opps = [o for o in filtered_opps if "STRONG YES" in o['recommendation']['verdict']]
+                elif filter_verdict == "🟢🟡 Yes/Maybe":
+                    filtered_opps = [o for o in filtered_opps if "NO" not in o['recommendation']['verdict']]
+                elif filter_verdict == "🔴 No/Wait":
+                    filtered_opps = [o for o in filtered_opps if "NO" in o['recommendation']['verdict'] or "WAIT" in o['recommendation']['verdict']]
+            
+            filtered_opps = [o for o in filtered_opps if o['monthly_yield'] >= min_yield]
+            
+            # Sort
+            if sort_by == "Monthly Yield":
+                filtered_opps = sorted(filtered_opps, key=lambda x: x['monthly_yield'], reverse=True)
+            elif sort_by == "IV Rank":
+                filtered_opps = sorted(filtered_opps, key=lambda x: x['iv_rank'], reverse=True)
+            elif sort_by == "Days to Expiry":
+                filtered_opps = sorted(filtered_opps, key=lambda x: x['days_to_expiry'])
+            elif sort_by == "Strike Distance":
+                filtered_opps = sorted(filtered_opps, key=lambda x: (x['strike'] - x['current_price']) / x['current_price'])
+            
+            st.markdown("---")
+            
+            # Display filtered opportunities in 2-3 column layout
+            st.markdown("### 🎯 Covered Call Opportunities")
+            
+            # Create flexible grid layout
+            opportunities_per_row = 3 if len(filtered_opps) > 6 else 2
+            
+            for i in range(0, len(filtered_opps), opportunities_per_row):
+                cols = st.columns(opportunities_per_row)
+                
+                for j in range(opportunities_per_row):
+                    if i + j < len(filtered_opps):
+                        with cols[j]:
+                            opp = filtered_opps[i + j]
+                            opp['_index'] = i + j  # Add index for unique keys
+                            # Use native Streamlit components
+                            display_opportunity_card(opp)
+                
+                # Add spacing between rows
+                if i + opportunities_per_row < len(filtered_opps):
+                    st.markdown("---")
+        else:
+            st.info("No opportunities found. This could mean:")
+            st.markdown("""
+            - Your positions don't have liquid options chains
+            - Premiums are too low across the board
+            - Try adjusting your position sizes to have at least 100 shares
+            
+            💡 **Tip:** Focus on adding positions in high-volatility growth stocks with active options markets
+            """)
+    else:
+        st.info("Click 'Scan for Opportunities' to find covered call trades")
 
 def record_decision(opp: Dict, decision: str, contracts: int, fill_price: float, reasoning: str):
     """Record trade decision"""
@@ -1284,7 +1298,6 @@ def record_decision(opp: Dict, decision: str, contracts: int, fill_price: float,
     save_json_data(DECISIONS_FILE, st.session_state.decisions)
 
 def inject_custom_css():
-    """Inject simple, clean CSS that we can actually control"""
     st.markdown("""
     <style>
     /* SIMPLE, CLEAN CSS - NO COMPLEXITY */
@@ -1396,6 +1409,71 @@ def inject_custom_css():
     }
     </style>
     """, unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+    /* Fix for select, input, and slider controls - MORE AGGRESSIVE */
+    .stSelectbox, .stTextInput, .stSlider, .stNumberInput, .stRadio, .stDateInput, .stMultiSelect, .stTextArea {
+        background: #1A1A1A !important;
+        color: #FFFFFF !important;
+        border-radius: 8px !important;
+    }
+    .stSelectbox div[data-baseweb="select"] {
+        background: #1A1A1A !important;
+        color: #FFFFFF !important;
+    }
+    .stSelectbox input, .stTextInput input, .stNumberInput input, .stTextArea textarea {
+        background: #1A1A1A !important;
+        color: #FFFFFF !important;
+        border: 2px solid #444444 !important;
+    }
+    .stSlider > div > div > div {
+        background: linear-gradient(90deg, #00D2FF, #FF6B35) !important;
+    }
+    .stSlider > div > div {
+        background: #1A1A1A !important;
+    }
+    
+    /* MORE AGGRESSIVE FILTER FIXES */
+    .stSelectbox > div > div {
+        background: #1A1A1A !important;
+        color: #FFFFFF !important;
+    }
+    .stSelectbox > div > div > div {
+        background: #1A1A1A !important;
+        color: #FFFFFF !important;
+    }
+    .stSelectbox > div > div > div > div {
+        background: #1A1A1A !important;
+        color: #FFFFFF !important;
+    }
+    .stSelectbox > div > div > div > div > div {
+        background: #1A1A1A !important;
+        color: #FFFFFF !important;
+    }
+    
+    /* Slider specific fixes */
+    .stSlider > div > div > div > div {
+        background: #1A1A1A !important;
+        color: #FFFFFF !important;
+    }
+    .stSlider > div > div > div > div > div {
+        background: #1A1A1A !important;
+        color: #FFFFFF !important;
+    }
+    
+    /* Force all form elements to have dark background */
+    [data-baseweb="select"], [data-baseweb="input"], [data-baseweb="textarea"] {
+        background: #1A1A1A !important;
+        color: #FFFFFF !important;
+    }
+    
+    /* Override any white backgrounds in form elements */
+    [style*="background-color: white"], [style*="background: white"] {
+        background: #1A1A1A !important;
+        color: #FFFFFF !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 def main():
     # Inject custom CSS
@@ -1430,84 +1508,8 @@ def main():
                 opportunities = scan_covered_call_opportunities()
                 st.session_state.opportunities = opportunities
         
-        if hasattr(st.session_state, 'opportunities'):
-            if st.session_state.opportunities:
-                # Show summary
-                st.markdown("### 📊 Opportunity Summary")
-                
-                # Count recommendations by type
-                strong_yes = len([o for o in st.session_state.opportunities if "STRONG YES" in o['recommendation']['verdict']])
-                yes = len([o for o in st.session_state.opportunities if "YES" in o['recommendation']['verdict'] and "STRONG" not in o['recommendation']['verdict']])
-                maybe = len([o for o in st.session_state.opportunities if "MAYBE" in o['recommendation']['verdict'] or "WAIT" in o['recommendation']['verdict']])
-                no = len([o for o in st.session_state.opportunities if "NO" in o['recommendation']['verdict']])
-                
-                col1, col2, col3, col4, col5 = st.columns(5)
-                with col1:
-                    st.metric("Total Opportunities", len(st.session_state.opportunities))
-                with col2:
-                    st.metric("🟢 Strong Yes", strong_yes)
-                with col3:
-                    st.metric("🟡 Yes/Maybe", yes + maybe)
-                with col4:
-                    st.metric("🔴 No", no)
-                with col5:
-                    avg_yield = sum(o['monthly_yield'] for o in st.session_state.opportunities) / len(st.session_state.opportunities)
-                    st.metric("Avg Monthly Yield", f"{avg_yield:.1f}%")
-                
-                st.markdown("---")
-                
-                # Filter options
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    filter_verdict = st.selectbox("Filter by Verdict", 
-                        ["All", "🟢 Strong Yes Only", "🟢🟡 Yes/Maybe", "🔴 No/Wait"])
-                with col2:
-                    sort_by = st.selectbox("Sort by", 
-                        ["Monthly Yield", "IV Rank", "Days to Expiry", "Strike Distance"])
-                with col3:
-                    min_yield = st.slider("Min Monthly Yield %", 0.0, 5.0, 0.0, 0.1)
-                
-                # Filter and sort opportunities
-                filtered_opps = st.session_state.opportunities
-                
-                if filter_verdict != "All":
-                    if filter_verdict == "🟢 Strong Yes Only":
-                        filtered_opps = [o for o in filtered_opps if "STRONG YES" in o['recommendation']['verdict']]
-                    elif filter_verdict == "🟢🟡 Yes/Maybe":
-                        filtered_opps = [o for o in filtered_opps if "NO" not in o['recommendation']['verdict']]
-                    elif filter_verdict == "🔴 No/Wait":
-                        filtered_opps = [o for o in filtered_opps if "NO" in o['recommendation']['verdict'] or "WAIT" in o['recommendation']['verdict']]
-                
-                filtered_opps = [o for o in filtered_opps if o['monthly_yield'] >= min_yield]
-                
-                # Sort
-                if sort_by == "Monthly Yield":
-                    filtered_opps = sorted(filtered_opps, key=lambda x: x['monthly_yield'], reverse=True)
-                elif sort_by == "IV Rank":
-                    filtered_opps = sorted(filtered_opps, key=lambda x: x['iv_rank'], reverse=True)
-                elif sort_by == "Days to Expiry":
-                    filtered_opps = sorted(filtered_opps, key=lambda x: x['days_to_expiry'])
-                elif sort_by == "Strike Distance":
-                    filtered_opps = sorted(filtered_opps, key=lambda x: (x['strike'] - x['current_price']) / x['current_price'])
-                
-                st.markdown("---")
-                
-                # Display filtered opportunities
-                for idx, opp in enumerate(filtered_opps):
-                    opp['_index'] = idx  # Add index for unique keys
-                    display_opportunity_card(opp)
-                    st.markdown("---")
-            else:
-                st.info("No opportunities found. This could mean:")
-                st.markdown("""
-                - Your positions don't have liquid options chains
-                - Premiums are too low across the board
-                - Try adjusting your position sizes to have at least 100 shares
-                
-                💡 **Tip:** Focus on adding positions in high-volatility growth stocks with active options markets
-                """)
-        else:
-            st.info("Click 'Scan for Opportunities' to find covered call trades")
+        # Use the new display function
+        display_opportunities_section()
         
         if hasattr(st.session_state, 'show_take_dialog'):
             opp = st.session_state.show_take_dialog
