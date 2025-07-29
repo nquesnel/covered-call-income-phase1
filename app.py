@@ -972,8 +972,21 @@ def analyze_covered_call_opportunity(position, call, current_price, iv_rank, gro
     return rec
 
 def scan_covered_call_opportunities():
-    """Scan positions for HIGH-QUALITY covered call opportunities only"""
+    """Scan positions for covered call opportunities using user-defined filters"""
     opportunities = []
+    
+    # Get user-defined filters or use defaults
+    filters = st.session_state.get('scan_filters', {
+        'min_yield_growth': 0.5,
+        'min_yield_moderate': 0.8,
+        'min_yield_conservative': 1.0,
+        'min_iv_rank': 20,
+        'max_spread': 0.75,
+        'min_premium_pct': 0.003,
+        'include_earnings': False,
+        'show_all_recommendations': True,
+        'days_range': (21, 35)
+    })
     
     for position in st.session_state.positions:
         # Skip positions with less than 100 shares
@@ -990,11 +1003,12 @@ def scan_covered_call_opportunities():
             if not options_dates:
                 continue
             
-            # TIGHTER CRITERIA: Only look at 21-35 days (sweet spot)
+            # Use user-defined date range
+            min_days, max_days = filters['days_range']
             target_dates = [
-                datetime.now() + timedelta(days=21),
-                datetime.now() + timedelta(days=28),
-                datetime.now() + timedelta(days=35)
+                datetime.now() + timedelta(days=min_days),
+                datetime.now() + timedelta(days=(min_days + max_days) // 2),
+                datetime.now() + timedelta(days=max_days)
             ]
             
             for target_date in target_dates:
@@ -1051,30 +1065,30 @@ def scan_covered_call_opportunities():
                             monthly_yield = (premium / current_price) * 100 * (30 / days_to_exp)
                             annual_yield = monthly_yield * 12
                             
-                            # QUALITY FILTERS - Show good opportunities, not every option
-                            # 1. Minimum premium requirements (loosened)
-                            min_premium = current_price * 0.003  # 0.3% minimum (was 0.5%)
+                            # QUALITY FILTERS - Using user-defined settings
+                            # 1. Minimum premium requirements
+                            min_premium = current_price * filters['min_premium_pct']
                             if premium < min_premium:
                                 continue
                                 
-                            # 2. Minimum monthly yield based on category (loosened)
+                            # 2. Minimum monthly yield based on category
                             if growth_category in ['Hypergrowth', 'Aggressive']:
-                                min_yield = 0.5  # 0.5% monthly minimum for growth (was 1%)
+                                min_yield = filters['min_yield_growth']
                             elif growth_category == 'Moderate':
-                                min_yield = 0.8  # 0.8% monthly for moderate (was 1.5%)
+                                min_yield = filters['min_yield_moderate']
                             else:
-                                min_yield = 1.0  # 1% monthly for conservative (was 2%)
+                                min_yield = filters['min_yield_conservative']
                                 
                             if monthly_yield < min_yield:
                                 continue
                                 
-                            # 3. IV Rank filter - show decent volatility (loosened)
-                            if iv_rank < 20:  # Skip only very low volatility (was 30)
+                            # 3. IV Rank filter
+                            if iv_rank < filters['min_iv_rank']:
                                 continue
                                 
-                            # 4. Bid-Ask spread filter (loosened)
+                            # 4. Bid-Ask spread filter
                             spread = (call['ask'] - call['bid']) / call['bid'] if call['bid'] > 0 else 1
-                            if spread > 0.75:  # Skip if spread > 75% (was 50%)
+                            if spread > filters['max_spread']:
                                 continue
                             
                             # Check for upcoming earnings
@@ -1103,17 +1117,23 @@ def scan_covered_call_opportunities():
                             
                             # Adjust recommendation based on earnings proximity
                             if days_to_earnings and days_to_earnings <= 14:
-                                # Skip opportunities too close to earnings
-                                continue
+                                if not filters['include_earnings']:
+                                    # Skip opportunities too close to earnings
+                                    continue
+                                else:
+                                    # Include but warn strongly
+                                    recommendation['verdict'] = "🔴 EARNINGS WARNING"
+                                    recommendation['reasoning'] = f"⚠️ EARNINGS in {days_to_earnings} days! High risk!"
                             elif days_to_earnings and days_to_earnings <= 30:
                                 # Add earnings warning to existing recommendation
                                 if "YES" in recommendation['verdict']:
                                     recommendation['verdict'] = recommendation['verdict'].replace("YES", "MAYBE")
                                 recommendation['reasoning'] += f" | ⚠️ Earnings {earnings_date} ({days_to_earnings} days)"
                             
-                            # Keep all recommendations - let user decide based on verdict
-                            # This shows YES, MAYBE, and even some NO recommendations
-                            # so users can see why certain trades aren't recommended
+                            # Filter recommendations based on user preference
+                            if not filters['show_all_recommendations']:
+                                if "NO" in recommendation['verdict'] or "WAIT" in recommendation['verdict']:
+                                    continue
                             
                             # Extract Greeks
                             delta = call.get('delta', 0)
@@ -1558,6 +1578,44 @@ def main():
             with st.expander(f"ℹ️ {len(insufficient_shares)} positions with <100 shares (can't sell calls)", expanded=False):
                 for pos in insufficient_shares:
                     st.write(f"• **{pos['symbol']}**: {pos['shares']} shares (need {100 - pos['shares']} more)")
+        
+        # Add filter controls BEFORE scanning
+        with st.expander("⚙️ Adjust Scan Filters", expanded=False):
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.markdown("**Minimum Monthly Yield %**")
+                min_yield_growth = st.slider("Growth Stocks", 0.0, 3.0, 0.5, 0.1, key="yield_growth")
+                min_yield_moderate = st.slider("Moderate Stocks", 0.0, 3.0, 0.8, 0.1, key="yield_moderate")
+                min_yield_conservative = st.slider("Conservative Stocks", 0.0, 3.0, 1.0, 0.1, key="yield_conservative")
+            
+            with col2:
+                st.markdown("**Volatility & Spreads**")
+                min_iv_rank = st.slider("Min IV Rank %", 0, 50, 20, 5)
+                max_spread = st.slider("Max Bid-Ask Spread %", 25, 150, 75, 25)
+                min_premium_pct = st.slider("Min Premium (% of stock)", 0.1, 1.0, 0.3, 0.1)
+            
+            with col3:
+                st.markdown("**Other Filters**")
+                include_earnings = st.checkbox("Include stocks with earnings <14 days", value=False)
+                show_all_recommendations = st.checkbox("Show NO/WAIT recommendations", value=True)
+                days_range = st.select_slider("Days to Expiration Range", 
+                    options=[(14,21), (21,35), (21,45), (30,60)],
+                    value=(21,35),
+                    format_func=lambda x: f"{x[0]}-{x[1]} days")
+            
+            # Store filter settings
+            st.session_state.scan_filters = {
+                'min_yield_growth': min_yield_growth,
+                'min_yield_moderate': min_yield_moderate,
+                'min_yield_conservative': min_yield_conservative,
+                'min_iv_rank': min_iv_rank,
+                'max_spread': max_spread / 100,  # Convert to decimal
+                'min_premium_pct': min_premium_pct / 100,  # Convert to decimal
+                'include_earnings': include_earnings,
+                'show_all_recommendations': show_all_recommendations,
+                'days_range': days_range
+            }
         
         if st.button("🔄 Scan for Opportunities"):
             with st.spinner("Scanning positions..."):
