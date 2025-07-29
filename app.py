@@ -1599,10 +1599,17 @@ def main():
                 st.markdown("**Other Filters**")
                 include_earnings = st.checkbox("Include stocks with earnings <14 days", value=False)
                 show_all_recommendations = st.checkbox("Show NO/WAIT recommendations", value=True)
-                days_range = st.select_slider("Days to Expiration Range", 
-                    options=[(14,21), (21,35), (21,45), (30,60)],
-                    value=(21,35),
-                    format_func=lambda x: f"{x[0]}-{x[1]} days")
+                # Using strings instead of tuples to avoid select_slider error
+                days_range_options = {
+                    "14-21 days": (14, 21),
+                    "21-35 days": (21, 35),
+                    "21-45 days": (21, 45),
+                    "30-60 days": (30, 60)
+                }
+                days_range_str = st.selectbox("Days to Expiration Range", 
+                    options=list(days_range_options.keys()),
+                    index=1)  # Default to "21-35 days"
+                days_range = days_range_options[days_range_str]
             
             # Store filter settings
             st.session_state.scan_filters = {
