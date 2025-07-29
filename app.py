@@ -1051,30 +1051,30 @@ def scan_covered_call_opportunities():
                             monthly_yield = (premium / current_price) * 100 * (30 / days_to_exp)
                             annual_yield = monthly_yield * 12
                             
-                            # QUALITY FILTERS - Only show high-probability plays
-                            # 1. Minimum premium requirements
-                            min_premium = current_price * 0.005  # 0.5% minimum
+                            # QUALITY FILTERS - Show good opportunities, not every option
+                            # 1. Minimum premium requirements (loosened)
+                            min_premium = current_price * 0.003  # 0.3% minimum (was 0.5%)
                             if premium < min_premium:
                                 continue
                                 
-                            # 2. Minimum monthly yield based on category
+                            # 2. Minimum monthly yield based on category (loosened)
                             if growth_category in ['Hypergrowth', 'Aggressive']:
-                                min_yield = 1.0  # 1% monthly minimum for growth
+                                min_yield = 0.5  # 0.5% monthly minimum for growth (was 1%)
                             elif growth_category == 'Moderate':
-                                min_yield = 1.5  # 1.5% monthly for moderate
+                                min_yield = 0.8  # 0.8% monthly for moderate (was 1.5%)
                             else:
-                                min_yield = 2.0  # 2% monthly for conservative
+                                min_yield = 1.0  # 1% monthly for conservative (was 2%)
                                 
                             if monthly_yield < min_yield:
                                 continue
                                 
-                            # 3. IV Rank filter - only show when IV is elevated
-                            if iv_rank < 30:  # Skip low volatility
+                            # 3. IV Rank filter - show decent volatility (loosened)
+                            if iv_rank < 20:  # Skip only very low volatility (was 30)
                                 continue
                                 
-                            # 4. Bid-Ask spread filter
+                            # 4. Bid-Ask spread filter (loosened)
                             spread = (call['ask'] - call['bid']) / call['bid'] if call['bid'] > 0 else 1
-                            if spread > 0.5:  # Skip if spread > 50%
+                            if spread > 0.75:  # Skip if spread > 75% (was 50%)
                                 continue
                             
                             # Check for upcoming earnings
@@ -1111,9 +1111,9 @@ def scan_covered_call_opportunities():
                                     recommendation['verdict'] = recommendation['verdict'].replace("YES", "MAYBE")
                                 recommendation['reasoning'] += f" | ⚠️ Earnings {earnings_date} ({days_to_earnings} days)"
                             
-                            # FINAL FILTER: Only show YES recommendations
-                            if "NO" in recommendation['verdict'] or "WAIT" in recommendation['verdict']:
-                                continue
+                            # Keep all recommendations - let user decide based on verdict
+                            # This shows YES, MAYBE, and even some NO recommendations
+                            # so users can see why certain trades aren't recommended
                             
                             # Extract Greeks
                             delta = call.get('delta', 0)
@@ -1227,8 +1227,8 @@ def display_opportunities_section():
     if hasattr(st.session_state, 'opportunities'):
         if st.session_state.opportunities:
             # Show summary
-            st.markdown("### 🎯 HIGH-QUALITY OPPORTUNITIES ONLY")
-            st.markdown("*Filtered for: Min yield requirements, IV > 30%, tight spreads, optimal timing*")
+            st.markdown("### 📊 QUALITY COVERED CALL OPPORTUNITIES")
+            st.markdown("*Balanced filtering: Showing good opportunities with clear recommendations*")
             
             # Count recommendations by type
             strong_yes = len([o for o in st.session_state.opportunities if "STRONG YES" in o['recommendation']['verdict']])
@@ -1308,23 +1308,22 @@ def display_opportunities_section():
                 if i + opportunities_per_row < len(filtered_opps):
                     st.markdown("---")
         else:
-            st.warning("🎯 No HIGH-QUALITY opportunities found!")
+            st.info("📊 No quality opportunities found with current filters")
             st.markdown("""
-            **Our strict filters require:**
-            - ✅ Minimum monthly yield: 1% (growth), 1.5% (moderate), 2% (conservative)
-            - ✅ IV Rank > 30% (elevated volatility)
-            - ✅ Tight bid-ask spreads (<50%)
-            - ✅ Meaningful premium (>0.5% of stock price)
+            **Our balanced filters require:**
+            - ✅ Minimum monthly yield: 0.5% (growth), 0.8% (moderate), 1% (conservative)
+            - ✅ IV Rank > 20% (some volatility)
+            - ✅ Reasonable bid-ask spreads (<75%)
+            - ✅ Meaningful premium (>0.3% of stock price)
             - ✅ 21-35 days to expiration
-            - ✅ No earnings within 14 days
-            - ✅ Positive recommendation only
+            - ✅ Avoiding earnings within 14 days
             
-            **What this means:**
-            - Market conditions may be too calm (low volatility)
-            - Your stocks might not have active options
-            - Wait for volatility spikes or earnings season
+            **Possible reasons:**
+            - Market volatility is very low
+            - Your positions may not have liquid options
+            - Options premiums are compressed
             
-            💡 **Try again when:** VIX > 20, after market selloffs, or pre-earnings
+            💡 **Tips:** Check after market moves, add high-volume stocks, or wait for earnings season
             """)
     else:
         st.info("Click 'Scan for Opportunities' to find covered call trades")
